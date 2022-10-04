@@ -8,12 +8,18 @@
 //! ```
 //! use hex;
 //! use cashaddr::{CashEnc, HashType};
-//! let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+//! let payload: Vec<u8> = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+//!
+//! // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the prefix
 //! let cashaddr = "bchtest:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyvwc0uz5t";
-//! assert_eq!(payload.encode("bchtest", HashType::P2SH).unwrap(), cashaddr);
+//! assert_eq!(payload.encode_p2sh("bchtest").unwrap(), cashaddr);
+//!
+//! // encode the payload bytes as a p2pkh cashaddr, using "bitcoincash" as the prefix
+//! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+//! assert_eq!(payload.encode_p2pkh("bitcoincash").unwrap(), cashaddr);
 //! ```
 //!
-//! ## Atrribution
+//! ## Attribution
 //! Most of this code was forked from
 //! [`bitcoincash-addr`](https://docs.rs/bitcoincash-addr/latest/bitcoincash_addr/). This library
 //! was created to both provide a more convenient user interface, as well as support arbitrary
