@@ -109,6 +109,8 @@ impl fmt::Display for EncodeError {
     }
 }
 
+impl std::error::Error for EncodeError {}
+
 /// Encode any `AsRef<[u8]>` into a cashaddr string
 pub trait CashEnc : AsRef<[u8]> {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
