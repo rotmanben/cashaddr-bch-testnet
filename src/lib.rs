@@ -28,6 +28,9 @@
 
 use std::fmt;
 
+mod decode;
+pub use decode::*;
+
 /// The cashaddr character set for encoding
 pub const CHARSET: &[u8; 32] = b"qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 /// The set of allowed hash lenghts for cashaddr encoding.
