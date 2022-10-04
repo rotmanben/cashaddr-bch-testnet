@@ -99,6 +99,17 @@ pub enum HashType {
     P2SH = 0x08,
 }
 
+impl TryFrom<u8> for HashType {
+    type Error = DecodeError;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0x00 => Ok(Self::P2PKH),
+            0x08 => Ok(Self::P2SH),
+            _ => Err(DecodeError::InvalidVersion(value)),
+        }
+    }
+}
+
 /// Error type describing something that went wrong during enoding a sequence of `u8` into a
 /// cashaddr String
 #[derive(Debug)]

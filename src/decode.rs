@@ -103,13 +103,7 @@ pub trait CashDec: AsRef<str> {
 
         // Extract the hash type and return
         let version_type = version & TYPE_MASK;
-        let hash_type = if version_type == HashType::P2PKH as u8 {
-            HashType::P2PKH
-        } else if version_type == HashType::P2SH as u8 {
-            HashType::P2SH
-        } else {
-            return Err(DecodeError::InvalidVersion(version));
-        };
+        let hash_type = HashType::try_from(version_type)?;
 
         Ok(Address {
             payload: body.to_vec(),
