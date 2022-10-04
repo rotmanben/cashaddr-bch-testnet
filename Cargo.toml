@@ -2,6 +2,11 @@
 name = "cashaddr"
 version = "0.1.0"
 edition = "2021"
+authors = ["pezcore"]
+description = "Cashaddr codec library"
+keywords = ["bch", "bitcoin-cash", "cashaddr", "codec"]
+license = "MIT"
+repository = "https://gitlab.com/pezcore/cashaddr"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
