@@ -83,7 +83,8 @@ impl fmt::Display for Payload {
         // encode result is safely unwrapped here because `Payload` instances can only be
         // constructed with valud payload fields because `Payload` uses priveate fields and
         // therefore can only be constructed via methods which guarantee valid payloads
-        write!(f, "{}", self.payload.encode("bitcoincash", self.hash_type).unwrap())
+        let string = self.payload.encode("bitcoincash", self.hash_type).unwrap();
+        f.pad(&string)
     }
 }
 
