@@ -56,7 +56,7 @@ impl FromStr for Payload {
         let payload_str = parts[1];
 
 
-        if addr_str.len() == 0 {
+        if addr_str.is_empty() {
             return Err(DecodeError::InvalidLength(0));
         }
         //
