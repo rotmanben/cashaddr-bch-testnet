@@ -112,7 +112,7 @@ fn convert_bits(data: &[u8], inbits: u8, outbits: u8, pad: bool) -> Vec<u8> {
 
 /// Type of hash payload. Either [P2PKH](https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash) or 
 /// [P2SH](https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash)
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum HashType {
     P2PKH = 0x00,
     P2SH = 0x08,
