@@ -82,7 +82,7 @@ impl<T: AsRef<[u8]>> CashEnc for T {}
 mod tests {
     use super::{HashType, CashEnc};
     #[test]
-    fn keyhash_20_main() {
+    fn keyhash_20_bitcoincash() {
         let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
         assert_eq!(payload.encode("bitcoincash", HashType::P2PKH).unwrap(), cashaddr);
@@ -94,17 +94,31 @@ mod tests {
         assert_eq!(payload.encode("bchtest", HashType::P2SH).unwrap(), cashaddr);
     }
     #[test]
-    fn scripthash_20_prefix() {
+    fn scripthash_20_pref() {
         let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
         let cashaddr = "pref:pr6m7j9njldwwzlg9v7v53unlr4jkmx6ey65nvtks5";
         assert_eq!(payload.encode("pref", HashType::P2SH).unwrap(), cashaddr);
     }
     #[test]
-    fn scripthash_24() {
+    fn keyhash_24_bitocoincash() {
         let cashaddr = "bitcoincash:q9adhakpwzztepkpwp5z0dq62m6u5v5xtyj7j3h2ws4mr9g0";
         let payload = "7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA";
         let payload = hex::decode(payload).unwrap();
         assert_eq!( payload.encode("bitcoincash", HashType::P2PKH).unwrap(), cashaddr);
+    }
+    #[test]
+    fn scripthash_24_bchtest() {
+        let cashaddr = "bchtest:p9adhakpwzztepkpwp5z0dq62m6u5v5xtyj7j3h2u94tsynr";
+        let payload = "7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA";
+        let payload = hex::decode(payload).unwrap();
+        assert_eq!( payload.encode("bchtest", HashType::P2SH).unwrap(), cashaddr);
+    }
+    #[test]
+    fn scripthash_24_pref() {
+        let cashaddr = "pref:p9adhakpwzztepkpwp5z0dq62m6u5v5xtyj7j3h2khlwwk5v";
+        let payload = "7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA";
+        let payload = hex::decode(payload).unwrap();
+        assert_eq!( payload.encode("pref", HashType::P2SH).unwrap(), cashaddr);
     }
     #[test]
     fn scripthash_32() {
