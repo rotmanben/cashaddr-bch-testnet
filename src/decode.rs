@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::HashType;
 use super::{convert_bits, polymod, expand_prefix};
 
@@ -27,10 +29,9 @@ const CHARSET_REV: [Option<u8>; 128] = [
 
 /// Representation of a parsed string
 #[derive(Debug)]
-pub struct Address<'a> {
+pub struct Payload {
     pub payload: Vec<u8>,
     pub hash_type: HashType,
-    pub prefix: &'a str,
 }
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
@@ -42,9 +43,10 @@ pub enum DecodeError {
     InvalidVersion(u8),
 }
 
-pub trait CashDec: AsRef<str> {
-    fn decode(&self) -> Result<Address, DecodeError> {
-        let addr_str = self.as_ref();
+impl FromStr for Payload {
+    type Err = DecodeError;
+
+    fn from_str(addr_str: &str) -> Result<Self, DecodeError> {
         let parts: Vec<&str> = addr_str.split(':').collect();
         if parts.len() != 2 {
             // TODO handle this case
@@ -105,15 +107,12 @@ pub trait CashDec: AsRef<str> {
         let version_type = version & TYPE_MASK;
         let hash_type = HashType::try_from(version_type)?;
 
-        Ok(Address {
+        Ok(Payload {
             payload: body.to_vec(),
             hash_type,
-            prefix,
         })
     }
 }
-
-impl<T: AsRef<str>> CashDec for T {}
 
 #[cfg(test)]
 mod tests {
@@ -121,7 +120,7 @@ mod tests {
     #[test]
     fn keyhash_20_main() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-        let addr = cashaddr.decode().unwrap();
+        let addr: Payload = cashaddr.parse().unwrap();
         let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
         assert_eq!(payload, addr.payload);
     }

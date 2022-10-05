@@ -1,8 +1,9 @@
 //! Implements
 //! [cashaddr](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
-//! encoding for arbitrary borrowed sequences of `u8`. The main use of this crate is via the
+//! codec for transcoding between cashaddr strings and bytes. The main use of this crate is via the
 //! [`CashEnc`] trait which provides and implementation for encoding any borrowed sequence of `u8`
-//! into a cashaddr string with arbirary prefix.
+//! into a cashaddr string with arbirary prefix. Also, the library supports parsing cashaddr string
+//! via the [`Payload`] struct, which implements [`FromStr`]
 //!
 //! # Examples
 //! ```
@@ -27,6 +28,8 @@
 
 
 use std::fmt;
+#[allow(unused_imports)]
+use std::str::FromStr;
 
 mod decode;
 pub use decode::*;
