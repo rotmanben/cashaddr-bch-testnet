@@ -129,4 +129,13 @@ mod tests {
         let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
         assert_eq!(payload, addr.payload);
     }
+    #[test]
+    #[should_panic]
+    fn checksum() {
+        let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr3jkmx6eylep8ekg2";
+        if let Err(DecodeError::ChecksumFailed(_)) = cashaddr.parse::<Payload>() {
+            panic!("Checksum missed detection of error")
+        }
+    }
+
 }
