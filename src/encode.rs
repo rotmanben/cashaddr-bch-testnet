@@ -78,9 +78,27 @@ pub trait CashEnc : AsRef<[u8]> {
 }
 impl<T: AsRef<[u8]>> CashEnc for T {}
 
+impl fmt::Display for Payload {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // encode result is safely unwrapped here because `Payload` instances can only be
+        // constructed with valud payload fields because `Payload` uses priveate fields and
+        // therefore can only be constructed via methods which guarantee valid payloads
+        write!(f, "{}", self.payload.encode("bitcoincash", self.hash_type).unwrap())
+    }
+}
+
+impl Payload {
+    pub fn to_string_no_prefix(&self) -> String {
+        let full = self.to_string();
+        let mut iter = full.split(':');
+        iter.next();
+        iter.next().unwrap().to_owned()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{HashType, CashEnc};
+    use super::{HashType, CashEnc, Payload};
     #[test]
     fn keyhash_20_bitcoincash() {
         let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
@@ -153,5 +171,19 @@ mod tests {
         let payload = hex::decode("D9FA7C4C6EF56DC4FF423BAAE6D495DBFF663D034A72D1DC7D52CBFE7D1E6858F9D523AC0A7A5C34077638E4DD1A701BD017842789982041")
             .unwrap();
         assert_eq!( payload.encode("pref", HashType::P2SH).unwrap(), cashaddr);
+    }
+    #[test]
+    fn payload_to_str() {
+        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+        let payload = Payload { payload, hash_type: HashType::P2PKH };
+        let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        assert_eq!(payload.to_string(), cashaddr);
+    }
+    #[test]
+    fn payload_to_str_no_prefix() {
+        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+        let payload = Payload { payload, hash_type: HashType::P2PKH };
+        let cashaddr = "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        assert_eq!(payload.to_string_no_prefix(), cashaddr);
     }
 }
