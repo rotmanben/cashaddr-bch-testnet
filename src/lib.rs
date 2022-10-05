@@ -30,7 +30,7 @@
 //! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
 //! let addr: Payload = cashaddr.parse().unwrap();
 //! let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
-//! assert_eq!(payload, addr.payload);
+//! assert_eq!(payload, addr.payload());
 //! ```
 //!
 //!
@@ -135,7 +135,16 @@ impl TryFrom<u8> for HashType {
 #[derive(Debug, PartialEq)]
 pub struct Payload {
     /// payload bytes
-    pub payload: Vec<u8>,
+    payload: Vec<u8>,
     /// hash type of the payload
-    pub hash_type: HashType,
+    hash_type: HashType,
+}
+
+impl Payload {
+    pub fn payload(&self) -> &[u8] {
+        &self.payload
+    }
+    pub fn hash_type(&self) -> HashType {
+        self.hash_type
+    }
 }
