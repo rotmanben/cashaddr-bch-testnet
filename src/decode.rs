@@ -55,6 +55,11 @@ impl FromStr for Payload {
     type Err = DecodeError;
 
     fn from_str(addr_str: &str) -> Result<Self, DecodeError> {
+        // Fail fast on empty strings
+        if addr_str.is_empty() {
+            return Err(DecodeError::InvalidLength(0));
+        }
+
         let parts: Vec<&str> = addr_str.split(':').collect();
         if parts.len() != 2 {
             // TODO handle this case
@@ -63,20 +68,12 @@ impl FromStr for Payload {
         let prefix = parts[0];
         let payload_str = parts[1];
 
-        if addr_str.is_empty() {
-            return Err(DecodeError::InvalidLength(0));
-        }
-        //
         // Decode payload to 5 bit array
         let payload_chars = payload_str.chars(); // Reintialize iterator here
         let payload_5_bits: Result<Vec<u8>, DecodeError> = payload_chars
-            .map(|c| {
-                let i = c as usize;
-                if let Some(Some(d)) = CHARSET_REV.get(i) {
-                    Ok(*d as u8)
-                } else {
-                    Err(DecodeError::InvalidChar(c))
-                }
+            .map(|c| match CHARSET_REV.get(c as usize) {
+                Some(Some(d)) => Ok(*d as u8),
+                _ => Err(DecodeError::InvalidChar(c))
             })
             .collect();
         let payload_5_bits = payload_5_bits?;
@@ -98,17 +95,18 @@ impl FromStr for Payload {
         let body = &payload[1..];
         let body_len = body.len();
         let version_size = version & SIZE_MASK;
-        if (version_size == 0x00 && body_len != 20)
-            || (version_size == 0x01 && body_len != 24)
-            || (version_size == 0x02 && body_len != 28)
-            || (version_size == 0x03 && body_len != 32)
-            || (version_size == 0x04 && body_len != 40)
-            || (version_size == 0x05 && body_len != 48)
-            || (version_size == 0x06 && body_len != 56)
-            || (version_size == 0x07 && body_len != 64)
-        {
-            return Err(DecodeError::InvalidLength(body_len));
-        }
+
+        match version_size {
+            0x00 if body_len != 20 => Err(DecodeError::InvalidLength(body_len)),
+            0x01 if body_len != 24 => Err(DecodeError::InvalidLength(body_len)),
+            0x02 if body_len != 28 => Err(DecodeError::InvalidLength(body_len)),
+            0x03 if body_len != 32 => Err(DecodeError::InvalidLength(body_len)),
+            0x04 if body_len != 40 => Err(DecodeError::InvalidLength(body_len)),
+            0x05 if body_len != 48 => Err(DecodeError::InvalidLength(body_len)),
+            0x06 if body_len != 56 => Err(DecodeError::InvalidLength(body_len)),
+            0x07 if body_len != 64 => Err(DecodeError::InvalidLength(body_len)),
+            _ => Ok(())
+        }?;
 
         // Extract the hash type and return
         let version_type = version & TYPE_MASK;
