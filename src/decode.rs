@@ -27,19 +27,27 @@ const CHARSET_REV: [Option<u8>; 128] = [
     Some(6),  Some(4),  Some(2),  None,     None,     None,     None,     None,
 ];
 
-/// Representation of a parsed string
-#[derive(Debug)]
+/// Representation of a parsed cashaddr payload.
+///
+/// This type provides the main interface for decoding cashaddr strings via the [`FromStr`] trait.
+#[derive(Debug, PartialEq)]
 pub struct Payload {
+    /// payload bytes
     pub payload: Vec<u8>,
+    /// hash type of the payload
     pub hash_type: HashType,
 }
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
 #[derive(Debug)]
 pub enum DecodeError {
+    /// Invalid character encountered during decoding
     InvalidChar(char),
+    /// Invalid input length
     InvalidLength(usize),
+    /// Failed Checksum
     ChecksumFailed(u64),
+    /// Invalid Version byte encountered during decoding
     InvalidVersion(u8),
 }
 
@@ -54,7 +62,6 @@ impl FromStr for Payload {
         }
         let prefix = parts[0];
         let payload_str = parts[1];
-
 
         if addr_str.is_empty() {
             return Err(DecodeError::InvalidLength(0));

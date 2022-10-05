@@ -24,7 +24,7 @@ impl std::error::Error for EncodeError {}
 /// Encode any `AsRef<[u8]>` into a cashaddr string
 pub trait CashEnc : AsRef<[u8]> {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
-    /// Hash type. The self must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
+    /// Hash type. `self` must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
     /// [`EncodeError`] is returned describing the lenth of the payload passed in.
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
         let hashflag = hash_type as u8;
@@ -67,9 +67,11 @@ pub trait CashEnc : AsRef<[u8]> {
         let cashaddr = [prefix, ":", &payload_str, &checksum_str].concat();
         Ok(cashaddr)
     }
+    /// Conveninence method for encoding as P2PKH hash type
     fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
         self.encode(prefix, HashType::P2PKH)
     }
+    /// Conveninence method for encoding as P2SH hash type
     fn encode_p2sh(&self, prefix: &str) -> Result<String, EncodeError> {
         self.encode(prefix, HashType::P2SH)
     }

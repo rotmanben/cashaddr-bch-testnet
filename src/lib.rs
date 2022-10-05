@@ -5,7 +5,10 @@
 //! into a cashaddr string with arbirary prefix. Also, the library supports parsing cashaddr string
 //! via the [`Payload`] struct, which implements [`FromStr`]
 //!
-//! # Examples
+//! # Encoding Examples
+//! Encoding a sequence of bytes into a cashaddr string is acheived via the [`CashEnc`] trait. This
+//! trait's methods are used to encode the bytes sequence, and is implemented for all types which
+//! implement [`AsRef<[u8]>`]
 //! ```
 //! use hex;
 //! use cashaddr::{CashEnc, HashType};
@@ -19,6 +22,17 @@
 //! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
 //! assert_eq!(payload.encode_p2pkh("bitcoincash").unwrap(), cashaddr);
 //! ```
+//!
+//! # Decoding Examples
+//! ```
+//! use hex;
+//! use cashaddr::Payload;
+//! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+//! let addr: Payload = cashaddr.parse().unwrap();
+//! let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+//! assert_eq!(payload, addr.payload);
+//! ```
+//!
 //!
 //! ## Attribution
 //! Most of this code was forked from
