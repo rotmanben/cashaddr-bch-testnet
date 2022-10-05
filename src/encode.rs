@@ -79,6 +79,8 @@ pub trait CashEnc : AsRef<[u8]> {
 impl<T: AsRef<[u8]>> CashEnc for T {}
 
 impl fmt::Display for Payload {
+    /// Format the payload as as a cashaddr using `"bitcoincash"`, the default prefix for the
+    /// bitcoin cash mainnet, as the prefix
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // encode result is safely unwrapped here because `Payload` instances can only be
         // constructed with valud payload fields because `Payload` uses priveate fields and
@@ -89,6 +91,8 @@ impl fmt::Display for Payload {
 }
 
 impl Payload {
+    /// Return a cashaddr String for the payload, using `"bitcoincash"` as the prefix, but without
+    /// including the prefix in the output.
     pub fn to_string_no_prefix(&self) -> String {
         let full = self.to_string();
         let mut iter = full.split(':');
