@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use super::HashType;
+use super::{HashType, Payload};
 use super::{convert_bits, polymod, expand_prefix};
 
 const SIZE_MASK: u8 = 0x07;
@@ -27,16 +27,6 @@ const CHARSET_REV: [Option<u8>; 128] = [
     Some(6),  Some(4),  Some(2),  None,     None,     None,     None,     None,
 ];
 
-/// Representation of a parsed cashaddr payload.
-///
-/// This type provides the main interface for decoding cashaddr strings via the [`FromStr`] trait.
-#[derive(Debug, PartialEq)]
-pub struct Payload {
-    /// payload bytes
-    pub payload: Vec<u8>,
-    /// hash type of the payload
-    pub hash_type: HashType,
-}
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
 #[derive(Debug)]
@@ -50,6 +40,7 @@ pub enum DecodeError {
     /// Invalid Version byte encountered during decoding
     InvalidVersion(u8),
 }
+
 
 impl FromStr for Payload {
     type Err = DecodeError;

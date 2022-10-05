@@ -128,3 +128,14 @@ impl TryFrom<u8> for HashType {
         }
     }
 }
+
+/// Representation of a parsed cashaddr payload.
+///
+/// This type provides the main interface for decoding cashaddr strings via the [`FromStr`] trait.
+#[derive(Debug, PartialEq)]
+pub struct Payload {
+    /// payload bytes
+    pub payload: Vec<u8>,
+    /// hash type of the payload
+    pub hash_type: HashType,
+}
