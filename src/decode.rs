@@ -121,11 +121,15 @@ mod tests {
         assert_eq!(payload, addr.payload);
     }
     #[test]
-    #[should_panic]
     fn checksum() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr3jkmx6eylep8ekg2";
-        if let Err(DecodeError::ChecksumFailed(_)) = cashaddr.parse::<Payload>() {
-            panic!("Checksum missed detection of error")
+        match cashaddr.parse::<Payload>() {
+            Err(DecodeError::ChecksumFailed(_)) => (),
+            Err(e) => panic!("Expected ChecksumFailed but found {e:?}"),
+            Ok(_) => panic!(
+                "Payload successfully parsed from cashaddr with invalid checksum. cashaddr was {}",
+                cashaddr,
+            ),
         }
     }
 
