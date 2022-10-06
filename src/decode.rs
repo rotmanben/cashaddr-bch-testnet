@@ -1,4 +1,6 @@
 use std::str::FromStr;
+use std::fmt::{self, Display};
+use std::error::Error;
 
 use super::{HashType, Payload};
 use super::{convert_bits, polymod, expand_prefix};
@@ -40,6 +42,19 @@ pub enum DecodeError {
     /// Invalid Version byte encountered during decoding
     InvalidVersion(u8),
 }
+
+impl Display for DecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidChar(c) => write!(f, "Invalid Character `{c}` encountered during decode."),
+            Self::InvalidLength(len) => write!(f, "Invalid hash length detected: {}", len),
+            Self::ChecksumFailed(cs) => write!(f, "Checksum failed validation: {}", cs),
+            Self::InvalidVersion(vbit) => write!(f, "Invalid version bit detected {:X}", vbit),
+        }
+    }
+}
+
+impl Error for DecodeError {}
 
 
 impl FromStr for Payload {
