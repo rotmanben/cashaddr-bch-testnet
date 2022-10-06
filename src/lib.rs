@@ -1,18 +1,12 @@
-//! Implements
-//! [cashaddr](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
-//! codec for transcoding between cashaddr strings and bytes. The main use of this crate is via the
-//! [`CashEnc`] trait which provides and implementation for encoding any borrowed sequence of `u8`
-//! into a cashaddr string with arbirary prefix. Also, the library supports parsing cashaddr string
-//! via the [`Payload`] struct, which implements [`FromStr`]
-//!
-//! # Encoding Examples
+#![doc = include_str!("../README.md")]
+//! # Usage
+//! ## Encoding
 //! Encoding a sequence of bytes into a cashaddr string is acheived via the [`CashEnc`] trait. This
 //! trait's methods are used to encode the bytes sequence, and is implemented for all types which
 //! implement [`AsRef<[u8]>`]
 //! ```
-//! use hex;
-//! use cashaddr::{CashEnc, HashType};
-//! let payload: Vec<u8> = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+//! use cashaddr::CashEnc;
+//! let payload = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9";
 //!
 //! // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the prefix
 //! let cashaddr = "bchtest:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyvwc0uz5t";
@@ -21,24 +15,38 @@
 //! // encode the payload bytes as a p2pkh cashaddr, using "bitcoincash" as the prefix
 //! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
 //! assert_eq!(payload.encode_p2pkh("bitcoincash").unwrap(), cashaddr);
+//!
+//! // arbitrary prefixes are supported
+//! let cashaddr = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla";
+//! assert_eq!(payload.encode_p2pkh("foobar").unwrap(), cashaddr);
 //! ```
 //!
-//! # Decoding Examples
+//! ## Decoding
+//! Decoding a cashaddr `str` to a binary payload is acheived via the [`Payload`] type which
+//! encapsulates the bayload itself and the detected hash type. Parsing is provided by the
+//! [`FromStr`] trait
+//!
 //! ```
-//! use hex;
-//! use cashaddr::Payload;
+//! use cashaddr::{Payload, HashType};
+//!
+//! // Use parse() to decode a P2PKH cashaddr string to a `Payload`
 //! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-//! let addr: Payload = cashaddr.parse().unwrap();
-//! let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
-//! assert_eq!(payload, addr.payload());
+//! let payload: Payload = cashaddr.parse().unwrap();
+//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.hash_type(), HashType::P2PKH);
+//!
+//! // Use parse() to decode a P2SH cashaddr string to a `Payload`
+//! let cashaddr = "bitcoincash:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyguug74nh";
+//! let payload: Payload = cashaddr.parse().unwrap();
+//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.hash_type(), HashType::P2SH);
+//!
+//! // arbitrary prefix are supported in decoding
+//! let cashaddr = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla";
+//! let payload: Payload = cashaddr.parse().unwrap();
+//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.hash_type(), HashType::P2PKH);
 //! ```
-//!
-//!
-//! ## Attribution
-//! Most of this code was forked from
-//! [`bitcoincash-addr`](https://docs.rs/bitcoincash-addr/latest/bitcoincash_addr/). This library
-//! was created to both provide a more convenient user interface, as well as support arbitrary
-//! prefixes.
 
 
 use std::fmt;
