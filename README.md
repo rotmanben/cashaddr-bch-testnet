@@ -12,7 +12,7 @@ codec.
 - Convenience methods for succinct expression of common conversion parameters
 - Arbitrary prefixes
 - Descriptive error types
-- Payload for encapsulating parsed cashaddr payload
+- Payload struct for encapsulating parsed cashaddr payload and hash type
 
 ## About the Codec
 
@@ -27,6 +27,7 @@ user prefix.
 ## Attribution
 Most of the codec algorithm logic was copied from
 [`bitcoincash-addr`](https://docs.rs/bitcoincash-addr/latest/bitcoincash_addr/).
-This crate seeks to improve on `bitcoincash-addr` a more generalized and
-convenient user interface, reducing scope as well as support arbitrary
-prefixes.
+This crate seeks to improve on `bitcoincash-addr` by providing a more
+generalized and ergonomic user interface, adding support for arbitrary
+prefixes, and reducing scope to only matters directly related the cashaddr
+codec itself (base58check codec removed from scope).

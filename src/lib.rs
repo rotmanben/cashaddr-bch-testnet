@@ -137,10 +137,52 @@ impl TryFrom<u8> for HashType {
     }
 }
 
-/// Representation of a parsed cashaddr payload. Consists of a sequence of bytes that comprise the
-/// payload and a hash type.
+/// Representation of a parsed cashaddr payload (i.e. the hash) and a hash type.
 ///
+/// This type deliberately has private fields to guarantee that it can only be instantiated by
+/// parseing a valid cashaddr str. As such, all `Payload` instances represent a deserialized,
+/// valid, cashaddr.
+///
+///
+/// ## Decoding
 /// This type provides the main interface for decoding cashaddr strings via the [`FromStr`] trait.
+/// ```
+/// use cashaddr::{Payload, HashType};
+///
+/// // Parse a cashaddr `str` as a Payload using trait FromStr
+/// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
+///
+/// // The payload exposes the hash (via AsRef, or payload())
+/// assert_eq!(payload.as_ref(),  b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+/// assert_eq!(payload.payload(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+/// // the payload exposes the hash type via hashtype
+/// assert_eq!(payload.hash_type(), HashType::P2PKH);
+/// ```
+///
+/// ## Encoding
+/// `Payload` supports encoding back to a cashaddr string via the [`fmt::Display`], and [`CashEnc`]
+/// traits, as well as the [`Payload::to_string_no_prefix`] method.
+///
+/// ```
+/// use cashaddr::{Payload, HashType, CashEnc};
+/// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
+///
+/// // For convenience, `Payload` imlements `trait Display` for encoding the payload using the
+/// // "bitcoincash" prefix, which is the standard prefix for the Bitcoin Cash mainnet:
+/// assert_eq!(payload.to_string(), "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
+///
+/// // For convenience, `Payload` provides to_string_no_prefix method which, which does the same
+/// // but omits the prefix, as is common as most application imply the "bitcoincash" prefix if it
+/// // is absent
+/// assert_eq!(payload.to_string_no_prefix(), "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
+///
+/// // Because `Payload` implements `AsRef<[u8]>`, it also implements CashEnc so it can easily be
+/// // encoded back into a cashaddr string
+/// assert_eq!(
+///     payload.encode_p2pkh("foobar").unwrap(),
+///     "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla"
+/// );
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Payload {
     /// payload bytes
