@@ -154,6 +154,62 @@ mod tests {
         assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
     }
     #[test]
+    fn scripthash_24_pref() {
+        let cashaddr = "pref:p9adhakpwzztepkpwp5z0dq62m6u5v5xtyj7j3h2khlwwk5v";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn keyhash_28_mainnet() {
+        let cashaddr = "bitcoincash:qgagf7w02x4wnz3mkwnchut2vxphjzccwxgjvvjmlsxqwkcw59jxxuz";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3A84F9CF51AAE98A3BB3A78BF16A6183790B18719126325BFC0C075B").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2PKH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn scripthash_28_bchtest() {
+        let cashaddr = "bchtest:pgagf7w02x4wnz3mkwnchut2vxphjzccwxgjvvjmlsxqwkcvs7md7wt";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3A84F9CF51AAE98A3BB3A78BF16A6183790B18719126325BFC0C075B").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn scripthash_28_pref() {
+        let cashaddr = "pref:pgagf7w02x4wnz3mkwnchut2vxphjzccwxgjvvjmlsxqwkcrsr6gzkn";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3A84F9CF51AAE98A3BB3A78BF16A6183790B18719126325BFC0C075B").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn keyhash_32_mainnet() {
+        let cashaddr = "bitcoincash:qvch8mmxy0rtfrlarg7ucrxxfzds5pamg73h7370aa87d80gyhqxq5nlegake";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3173EF6623C6B48FFD1A3DCC0CC6489B0A07BB47A37F47CFEF4FE69DE825C060").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2PKH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn scripthash_32_bchtest() {
+        let cashaddr = "bchtest:pvch8mmxy0rtfrlarg7ucrxxfzds5pamg73h7370aa87d80gyhqxq7fqng6m6";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3173EF6623C6B48FFD1A3DCC0CC6489B0A07BB47A37F47CFEF4FE69DE825C060").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
+    fn scripthash_32_pref() {
+        let cashaddr = "pref:pvch8mmxy0rtfrlarg7ucrxxfzds5pamg73h7370aa87d80gyhqxq4k9m7qf9";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("3173EF6623C6B48FFD1A3DCC0CC6489B0A07BB47A37F47CFEF4FE69DE825C060").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
+    }
+    #[test]
     fn checksum() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr3jkmx6eylep8ekg2";
         match cashaddr.parse::<Payload>() {
@@ -165,5 +221,4 @@ mod tests {
             ),
         }
     }
-
 }
