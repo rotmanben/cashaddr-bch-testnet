@@ -151,3 +151,80 @@ impl Payload {
         self.hash_type
     }
 }
+
+impl AsRef<[u8]> for Payload {
+    fn as_ref(&self) -> &[u8] { &self.payload }
+}
+
+#[cfg(test)]
+mod round_trip {
+    use super::{Payload, HashType, CashEnc};
+    #[test]
+    fn cashadd_p2pkh_mainnet() {
+        let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        let payload: Payload = cashaddr.parse().unwrap();
+        let recon = payload.encode("bitcoincash", HashType::P2PKH).expect("Encoding failed");
+        assert_eq!(cashaddr, recon);
+    }
+    #[test]
+    fn cashadd_p2pkh_pref() {
+        let cashaddr = "ligma:qpazxnwl7zhxs8m9cjvemtfen6h29yk2pyn77upyt4";
+        let payload: Payload = cashaddr.parse().unwrap();
+        let recon = payload.encode("ligma", HashType::P2PKH).expect("Encoding failed");
+        assert_eq!(cashaddr, recon);
+    }
+    #[test]
+    fn cashadd_p2sh_mainnet() {
+        let cashaddr = "bitcoincash:ppazxnwl7zhxs8m9cjvemtfen6h29yk2pytaupu3h0";
+        let payload: Payload = cashaddr.parse().unwrap();
+        let recon = payload.encode("bitcoincash", HashType::P2SH).expect("Encoding failed");
+        assert_eq!(cashaddr, recon);
+    }
+    #[test]
+    fn cashadd_p2sh_pref() {
+        let cashaddr = "ligma:ppazxnwl7zhxs8m9cjvemtfen6h29yk2pyymrnx8sg";
+        let payload: Payload = cashaddr.parse().unwrap();
+        let recon = payload.encode("ligma", HashType::P2SH).expect("Encoding failed");
+        assert_eq!(cashaddr, recon);
+    }
+    #[test]
+    fn payload_p2pkh_mainnet() {
+        let payload = Payload {
+            payload: hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap(),
+            hash_type: HashType::P2PKH,
+        };
+        let cashaddr = payload.to_string();
+        let recon = cashaddr.parse().unwrap();
+        assert_eq!(payload, recon);
+    }
+    #[test]
+    fn payload_p2pkh_pref() {
+        let payload = Payload {
+            payload: hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap(),
+            hash_type: HashType::P2PKH,
+        };
+        let cashaddr = payload.encode("ligma", HashType::P2PKH).unwrap();
+        let recon = cashaddr.parse().unwrap();
+        assert_eq!(payload, recon);
+    }
+    #[test]
+    fn payload_p2sh_mainnet() {
+        let payload = Payload {
+            payload: hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap(),
+            hash_type: HashType::P2SH,
+        };
+        let cashaddr = payload.to_string();
+        let recon = cashaddr.parse().unwrap();
+        assert_eq!(payload, recon);
+    }
+    #[test]
+    fn payload_p2sh_pref() {
+        let payload = Payload {
+            payload: hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap(),
+            hash_type: HashType::P2SH,
+        };
+        let cashaddr = payload.encode("ligma", HashType::P2SH).unwrap();
+        let recon = cashaddr.parse().unwrap();
+        assert_eq!(payload, recon);
+    }
+}
