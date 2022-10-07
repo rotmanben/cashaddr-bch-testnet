@@ -225,6 +225,14 @@ mod tests {
         assert_eq!(HashType::P2SH, addr.hash_type, "Incorrect Hash Type parsed");
     }
     #[test]
+    fn case_insensitive() {
+        let cashaddr = "bitcoincash:qr6m7j9njldWWzlg9v7v53unlr4JKmx6Eylep8ekg2";
+        let addr: Payload = cashaddr.parse().unwrap();
+        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
+        assert_eq!(payload, addr.payload);
+        assert_eq!(HashType::P2PKH, addr.hash_type);
+    }
+    #[test]
     fn checksum() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr3jkmx6eylep8ekg2";
         match cashaddr.parse::<Payload>() {
