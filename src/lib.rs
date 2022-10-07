@@ -27,25 +27,41 @@
 //! [`FromStr`] trait
 //!
 //! ```
-//! use cashaddr::{Payload, HashType};
+//! use cashaddr::{Payload, HashType, DecodeError};
+//!
+//! let EXPECTED_PAYLOAD = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9";
 //!
 //! // Use parse() to decode a P2PKH cashaddr string to a `Payload`
 //! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
 //! let payload: Payload = cashaddr.parse().unwrap();
-//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2PKH);
 //!
 //! // Use parse() to decode a P2SH cashaddr string to a `Payload`
 //! let cashaddr = "bitcoincash:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyguug74nh";
 //! let payload: Payload = cashaddr.parse().unwrap();
-//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2SH);
 //!
 //! // arbitrary prefix are supported in decoding
 //! let cashaddr = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla";
 //! let payload: Payload = cashaddr.parse().unwrap();
-//! assert_eq!(payload.as_ref(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2PKH);
+//!
+//! // Decoding is canse insensitive in the second part of the cashaddr
+//! let cashaddr = "foobar:qr6M7j9NJLdwwzLG9v7v53UNlr4jkmX6eyDe268tla";
+//! let payload: Payload = cashaddr.parse().unwrap();
+//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
+//! assert_eq!(payload.hash_type(), HashType::P2PKH);
+//!
+//! // Decoding checks that the checksum is valid
+//! // This char was changed to "8" -------↓
+//! let cashaddr = "foobar:qr6M7j9NJLdwwzLG8v7v53UNlr4jkmX6eyDe268tla";
+//! match cashaddr.parse::<Payload>() {
+//!     Err(DecodeError::ChecksumFailed(_)) => (),
+//!     _ => panic!("Failed to detect corrupt cashaddr checksum"),
+//! }
 //! ```
 
 
