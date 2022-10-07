@@ -76,7 +76,7 @@ pub use encode::*;
 
 /// The cashaddr character set for encoding
 pub const CHARSET: &[u8; 32] = b"qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-/// The set of allowed hash lenghts for cashaddr encoding.
+/// The set of allowed hash lengths for cashaddr encoding.
 pub const ALLOWED_LENGTHS: [usize;8] = [20, 24, 28, 32, 40, 48, 56, 64];
 
 // https://github.com/Bitcoin-ABC/bitcoin-abc/blob/2804a49bfc0764ba02ce2999809c52b3b9bb501e/src/cashaddr.cpp#L42

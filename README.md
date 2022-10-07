@@ -22,7 +22,8 @@ arbitrary sequence of either 20, 24, 28, 32, 40, 48, 56, or 64 bytes. The
 cashaddr format represents this information as a string which consists of 2
 parts: an arbitrary user-defined prefix, and a base32-encoded representation of
 the hash, hash type, and a checksum which checks both the hash payload and the
-user prefix.
+user prefix. For details, see the [cashaddr
+spec](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
 
 ## Attribution
 Most of the codec algorithm logic was copied from
