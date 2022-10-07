@@ -21,7 +21,9 @@ impl fmt::Display for EncodeError {
 
 impl std::error::Error for EncodeError {}
 
-/// Encode any `AsRef<[u8]>` into a cashaddr string
+/// Encode a sequence of bytes (`u8`) as a cashaddr string. This trait is implemented for all types
+/// implementing `AsRef<[u8]>` where the reference value is a slice of `u8` representing the hash
+/// payload bytes.
 pub trait CashEnc : AsRef<[u8]> {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
     /// Hash type. `self` must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
