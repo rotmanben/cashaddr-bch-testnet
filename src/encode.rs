@@ -96,10 +96,11 @@ impl Payload {
     /// Return a cashaddr String for the payload, using `"bitcoincash"` as the prefix, but without
     /// including the prefix in the output.
     pub fn to_string_no_prefix(&self) -> String {
-        let full = self.to_string();
-        let mut iter = full.split(':');
-        iter.next();
-        iter.next().unwrap().to_owned()
+        let mut full = self.to_string();
+        if let Some(sep_pos) = full.find(':') {
+            full.replace_range(..sep_pos + 1, "");
+        }
+        full
     }
 }
 
