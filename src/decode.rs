@@ -66,13 +66,10 @@ impl FromStr for Payload {
             return Err(DecodeError::InvalidLength(0));
         }
 
-        let parts: Vec<&str> = addr_str.split(':').collect();
-        if parts.len() != 2 {
-            // TODO handle this case
-            panic!("TODO, handle this case")
-        }
-        let prefix = parts[0];
-        let payload_str = parts[1];
+        let (prefix, payload_str) = match addr_str.split_once(":") {
+            Some(x) => x,
+            None => ("bitcoincash", addr_str),
+        };
 
         // Decode payload to 5 bit array
         let payload_chars = payload_str.chars(); // Reintialize iterator here
