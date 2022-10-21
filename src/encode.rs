@@ -110,7 +110,7 @@ impl Payload {
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-    use super::{CashEnc, HashType, Payload};
+    use super::{CashEnc, EncodeError, HashType, Payload};
     use crate::round_trip::TEST_VECTORS;
 
 
@@ -150,6 +150,14 @@ mod tests {
             let cashaddr = testcase.payload.encode_p2sh(testcase.prefix)
                 .expect("Failed to parse testvector");
             assert_eq!(cashaddr, testcase.cashaddr);
+        }
+    }
+    #[test]
+    fn incorrect_payload_len() {
+        let payload = hex!("7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA94");
+        match payload.encode("someprefix", HashType::P2PKH) {
+            Err(EncodeError::IncorrectPayloadLen(len)) => assert_eq!(len, 25),
+            Ok(_) => panic!("Failed to detect incorrect payload length for encoding"),
         }
     }
 }
