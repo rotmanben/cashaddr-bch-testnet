@@ -21,6 +21,47 @@ impl fmt::Display for EncodeError {
 
 impl std::error::Error for EncodeError {}
 
+fn enc(payload: &[u8], prefix: &str, raw_hashtype: u8) -> Result<String, EncodeError> {
+    let len = payload.len();
+    let version_byte = match len {
+        20 => 0x00,
+        24 => 0x01,
+        28 => 0x02,
+        32 => 0x03,
+        40 => 0x04,
+        48 => 0x05,
+        56 => 0x06,
+        64 => 0x07,
+        _ => return Err(EncodeError::IncorrectPayloadLen(len))
+    } | (raw_hashtype << 3);
+
+    let mut pl_buf = Vec::with_capacity(len + 1);
+    pl_buf.push(version_byte);
+    pl_buf.extend(payload);
+    let pl_5bit = convert_bits(&pl_buf, 8, 5, true);
+
+    // Construct payload string using CHARSET
+    let payload_str: String = pl_5bit
+        .iter()
+        .map(|b| CHARSET[*b as usize] as char)
+        .collect();
+
+    // Create checksum
+    let expanded_prefix = expand_prefix(prefix);
+    let checksum_input = [&expanded_prefix[..], &pl_5bit, &[0; 8]].concat();
+    let checksum = polymod(&checksum_input);
+
+    // Convert checksum to string
+    let checksum_str: String = (0..8)
+        .rev()
+        .map(|i| CHARSET[((checksum >> (i * 5)) & 31) as usize] as char)
+        .collect();
+
+    // Concatentate all parts
+    let cashaddr = [prefix, ":", &payload_str, &checksum_str].concat();
+    Ok(cashaddr)
+}
+
 /// Encode a sequence of bytes (`u8`) as a cashaddr string. This trait is implemented for all types
 /// implementing `AsRef<[u8]>` where the reference value is a slice of `u8` representing the hash
 /// payload bytes.
@@ -29,45 +70,7 @@ pub trait CashEnc : AsRef<[u8]> {
     /// Hash type. `self` must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
     /// [`EncodeError`] is returned describing the lenth of the payload passed in.
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
-        let hashflag = hash_type as u8;
-        let payload = self.as_ref();
-        let len = payload.len();
-        let version_byte = match len {
-            20 => 0x00,
-            24 => 0x01,
-            28 => 0x02,
-            32 => 0x03,
-            40 => 0x04,
-            48 => 0x05,
-            56 => 0x06,
-            64 => 0x07,
-            _ => return Err(EncodeError::IncorrectPayloadLen(len))
-        } | hashflag;
-        let mut pl_buf = Vec::with_capacity(len + 1);
-        pl_buf.push(version_byte);
-        pl_buf.extend(payload);
-        let pl_5bit = convert_bits(&pl_buf, 8, 5, true);
-
-        // Construct payload string using CHARSET
-        let payload_str: String = pl_5bit
-            .iter()
-            .map(|b| CHARSET[*b as usize] as char)
-            .collect();
-
-        // Create checksum
-        let expanded_prefix = expand_prefix(prefix);
-        let checksum_input = [&expanded_prefix[..], &pl_5bit, &[0; 8]].concat();
-        let checksum = polymod(&checksum_input);
-
-        // Convert checksum to string
-        let checksum_str: String = (0..8)
-            .rev()
-            .map(|i| CHARSET[((checksum >> (i * 5)) & 31) as usize] as char)
-            .collect();
-
-        // Concatentate all parts
-        let cashaddr = [prefix, ":", &payload_str, &checksum_str].concat();
-        Ok(cashaddr)
+        enc(self.as_ref(), prefix, hash_type as u8 >> 3)
     }
     /// Conveninence method for encoding as P2PKH hash type
     fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
