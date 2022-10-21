@@ -478,7 +478,7 @@ mod round_trip {
     ];
 
     #[test]
-    fn round_trip() {
+    fn forward() {
         for testcase in TEST_VECTORS.iter() {
             let payload: Payload = testcase.cashaddr.parse().unwrap();
             let recon = payload.encode(testcase.prefix, testcase.hashtype).expect("Encoding Failed");
@@ -486,7 +486,7 @@ mod round_trip {
         }
     }
     #[test]
-    fn round_trip_backward() {
+    fn backward() {
         for testcase in TEST_VECTORS.iter() {
             let payload = Payload {
                 payload: testcase.payload.iter().cloned().collect(),
