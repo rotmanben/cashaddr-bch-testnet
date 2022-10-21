@@ -110,9 +110,7 @@ impl Payload {
 #[cfg(test)]
 mod tests {
     use super::{HashType, CashEnc, Payload, enc};
-    use crate::round_trip::{TEST_VECTORS, TestCase};
-    use hex_literal::hex;
-
+    use crate::round_trip::TEST_VECTORS;
 
 
     #[test]
@@ -121,6 +119,18 @@ mod tests {
             let cashaddr = enc(testcase.payload, testcase.prefix, testcase.raw_hashtype)
                 .expect("Failed to parse cashaddr");
             assert_eq!(cashaddr, testcase.cashaddr, "Test failed for test case {:?}", testcase);
+        }
+    }
+    #[test]
+    fn cashenc() {
+        for testcase in TEST_VECTORS.iter() {
+            let hashtype = match testcase.raw_hashtype {
+                0 => HashType::P2PKH,
+                8 => HashType::P2SH,
+                _ => continue
+            };
+            let cashaddr = testcase.payload.encode(testcase.prefix, hashtype).unwrap();
+            assert_eq!(cashaddr, testcase.cashaddr);
         }
     }
     #[test]
