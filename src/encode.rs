@@ -70,7 +70,7 @@ pub trait CashEnc : AsRef<[u8]> {
     /// Hash type. `self` must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
     /// [`EncodeError`] is returned describing the lenth of the payload passed in.
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
-        enc(self.as_ref(), prefix, hash_type as u8 >> 3)
+        enc(self.as_ref(), prefix, u8::from(hash_type))
     }
     /// Conveninence method for encoding as P2PKH hash type
     fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
@@ -109,27 +109,14 @@ impl Payload {
 
 #[cfg(test)]
 mod tests {
-    use super::{HashType, CashEnc, Payload, enc};
+    use super::{HashType, CashEnc, Payload};
     use crate::round_trip::TEST_VECTORS;
 
 
     #[test]
-    fn encode() {
-        for testcase in TEST_VECTORS.iter() {
-            let cashaddr = enc(testcase.payload, testcase.prefix, testcase.raw_hashtype)
-                .expect("Failed to parse cashaddr");
-            assert_eq!(cashaddr, testcase.cashaddr, "Test failed for test case {:?}", testcase);
-        }
-    }
-    #[test]
     fn cashenc() {
         for testcase in TEST_VECTORS.iter() {
-            let hashtype = match testcase.raw_hashtype {
-                0 => HashType::P2PKH,
-                8 => HashType::P2SH,
-                _ => continue
-            };
-            let cashaddr = testcase.payload.encode(testcase.prefix, hashtype).unwrap();
+            let cashaddr = testcase.payload.encode(testcase.prefix, testcase.hashtype).unwrap();
             assert_eq!(cashaddr, testcase.cashaddr);
         }
     }

@@ -116,7 +116,7 @@ impl FromStr for Payload {
 
         // Extract the hash type and return
         let version_type = version & TYPE_MASK;
-        let hash_type = HashType::try_from(version_type)?;
+        let hash_type = HashType::try_from(version_type >> 3)?;
 
         Ok(Payload {
             payload: body.to_vec(),
@@ -134,14 +134,9 @@ mod tests {
     #[test]
     fn decode() {
         for tc in TEST_VECTORS.iter() {
-            let tc_hashtype = match tc.raw_hashtype {
-                0 => HashType::P2PKH,
-                8 => HashType::P2SH,
-                _ => continue,
-            };
             let payload: Payload = tc.cashaddr.parse().expect("could not parse");
             assert_eq!(payload.payload, tc.payload, "Incorrect payload parsed");
-            assert_eq!(payload.hash_type, tc_hashtype, "Incorrect Hash Type parsed")
+            assert_eq!(payload.hash_type, tc.hashtype, "Incorrect Hash Type parsed")
         }
     }
     #[test]
