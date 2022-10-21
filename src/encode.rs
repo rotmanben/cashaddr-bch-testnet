@@ -109,7 +109,8 @@ impl Payload {
 
 #[cfg(test)]
 mod tests {
-    use super::{HashType, CashEnc, Payload};
+    use hex_literal::hex;
+    use super::{CashEnc, Payload};
     use crate::round_trip::TEST_VECTORS;
 
 
@@ -121,17 +122,18 @@ mod tests {
         }
     }
     #[test]
-    fn payload_to_str() {
-        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
-        let payload = Payload { payload, hash_type: HashType::P2PKH };
+    fn payload_to_string() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
+        // Just Check to make sure the the correct payload was parsed
+        assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
         assert_eq!(payload.to_string(), cashaddr);
     }
     #[test]
     fn payload_to_str_no_prefix() {
-        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
-        let payload = Payload { payload, hash_type: HashType::P2PKH };
         let cashaddr = "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
+        assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
         assert_eq!(payload.to_string_no_prefix(), cashaddr);
     }
 }

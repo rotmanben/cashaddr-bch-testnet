@@ -127,6 +127,7 @@ impl FromStr for Payload {
 
 #[cfg(test)]
 mod tests {
+    use hex_literal::hex;
     use super::*;
 
     use crate::round_trip::TEST_VECTORS;
@@ -143,8 +144,8 @@ mod tests {
     fn case_insensitive() {
         let cashaddr = "bitcoincash:qr6m7j9njldWWzlg9v7v53unlr4JKmx6Eylep8ekg2";
         let addr: Payload = cashaddr.parse().unwrap();
-        let payload = hex::decode("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9").unwrap();
-        assert_eq!(payload, addr.payload);
+        let payload = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
+        assert_eq!(payload, addr.payload.as_ref());
         assert_eq!(HashType::P2PKH, addr.hash_type);
     }
     #[test]

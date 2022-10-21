@@ -13,5 +13,4 @@ repository = "https://gitlab.com/pezcore/cashaddr"
 [dependencies]
 
 [dev-dependencies]
-hex = "0.4.3"
 hex-literal = "0.3.4"
