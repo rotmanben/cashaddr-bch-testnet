@@ -110,7 +110,7 @@ impl Payload {
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-    use super::{CashEnc, Payload};
+    use super::{CashEnc, HashType, Payload};
     use crate::round_trip::TEST_VECTORS;
 
 
@@ -135,5 +135,21 @@ mod tests {
         let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
         assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
         assert_eq!(payload.to_string_no_prefix(), cashaddr);
+    }
+    #[test]
+    fn encode_p2pkh() {
+        for testcase in TEST_VECTORS.iter().filter(|x| x.hashtype == HashType::P2PKH) {
+            let cashaddr = testcase.payload.encode_p2pkh(testcase.prefix)
+                .expect("Failed to parse testvector");
+            assert_eq!(cashaddr, testcase.cashaddr);
+        }
+    }
+    #[test]
+    fn encode_p2sh() {
+        for testcase in TEST_VECTORS.iter().filter(|x| x.hashtype == HashType::P2SH) {
+            let cashaddr = testcase.payload.encode_p2sh(testcase.prefix)
+                .expect("Failed to parse testvector");
+            assert_eq!(cashaddr, testcase.cashaddr);
+        }
     }
 }
