@@ -6,11 +6,13 @@ codec.
 
 ## Features
 
-- Trait based interface for encoding arbitrary sequence of bytes to cashaddr
-  Strings
+- Trait based interfaces for transcoding arbitrary sequence of bytes to/from
+  cashaddr Strings
 - Generalized interface supporting all standard and many non-standard use-cases
 - Convenience methods for succinct expression of common conversion parameters
+- Custom hash types
 - Arbitrary prefixes
+- Elided prefix
 - Descriptive error types
 - Payload struct for encapsulating parsed cashaddr payload and hash type
 
