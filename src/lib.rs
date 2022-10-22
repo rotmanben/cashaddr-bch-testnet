@@ -21,6 +21,19 @@
 //! assert_eq!(payload.encode_p2pkh("foobar").unwrap(), cashaddr);
 //! ```
 //!
+//! Incorrect payload length is detected and captured during encoding
+//! ```
+//! use cashaddr::{CashEnc, EncodeError};
+//! let payload = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9t";
+//! match payload.encode_p2pkh("someprefix") {
+//!     Err(EncodeError::IncorrectPayloadLen(21)) => (), // pass
+//!     Err(EncodeError::IncorrectPayloadLen(_)) => panic!(
+//!         "Detected incorrect payload lenght, but failed to capture the correct actual input len"
+//!     ),
+//!     Ok(_) => panic!("Failed to detect incorrect payload length"),
+//! }
+//! ```
+//!
 //! ## Decoding
 //! Decoding a cashaddr `str` to a binary payload is acheived via the [`Payload`] type which
 //! encapsulates the bayload itself and the detected hash type. Parsing is provided by the
