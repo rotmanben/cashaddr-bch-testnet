@@ -1,4 +1,9 @@
-# cashaddr
+![docs.rs](https://img.shields.io/docsrs/cashaddr)
+![crates.io](https://img.shields.io/crates/v/cashaddr)
+![loicense](https://img.shields.io/crates/l/cashaddr)
+
+
+# Overview
 
 A library crate providing a dependency-free, pure rust implementation of the
 [cashaddr](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
