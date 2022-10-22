@@ -157,4 +157,12 @@ mod tests {
             ),
         }
     }
+    #[test]
+    fn invalid_char() {
+        match  "bitcoincash:qr6m7j9njlbWWzlg9v7v53unlr4JKmx6Eylep8ekg2".parse::<Payload>() {
+            Err(DecodeError::InvalidChar('b')) => (),
+            Err(e) => panic!("Failed to detect invalid char, instead detected {:?}", e),
+            Ok(_) => panic!("Failed to detect invalid char"),
+        }
+    }
 }
