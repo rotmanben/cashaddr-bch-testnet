@@ -37,7 +37,7 @@
 //!
 //! ## Decoding
 //! Decoding a cashaddr `str` to a binary payload is acheived via the [`Payload`] type which
-//! encapsulates the bayload itself and the detected hash type. Parsing is provided by the
+//! encapsulates the payload itself and the detected hash type. Parsing is provided by the
 //! [`FromStr`] trait
 //!
 //! ```
