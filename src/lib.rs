@@ -30,6 +30,7 @@
 //!     Err(EncodeError::IncorrectPayloadLen(_)) => panic!(
 //!         "Detected incorrect payload lenght, but failed to capture the correct actual input len"
 //!     ),
+//!     Err(e) => panic!("Detected unexpected error {}", e),
 //!     Ok(_) => panic!("Failed to detect incorrect payload length"),
 //! }
 //! ```
@@ -156,6 +157,9 @@ fn convert_bits(data: &[u8], inbits: u8, outbits: u8, pad: bool) -> Vec<u8> {
 pub enum HashType {
     P2PKH,
     P2SH,
+    /// Custom HashType value for explicitly specifying the type bits. Type bits must be less than
+    /// 16. Currently there is no standard for type bits semantics other than `0x00` for P2PKH and
+    /// `0x01` for P2SH, but this variant allows using other values.
     Custom(u8),
 }
 
