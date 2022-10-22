@@ -49,7 +49,7 @@ impl Display for DecodeError {
             Self::InvalidChar(c) => write!(f, "Invalid Character `{c}` encountered during decode."),
             Self::InvalidLength(len) => write!(f, "Invalid hash length detected: {}", len),
             Self::ChecksumFailed(cs) => write!(f, "Checksum failed validation: {}", cs),
-            Self::InvalidVersion(vbit) => write!(f, "Invalid version bit detected {:X}", vbit),
+            Self::InvalidVersion(vbit) => write!(f, "Invalid version byte detected {:X}", vbit),
         }
     }
 }
