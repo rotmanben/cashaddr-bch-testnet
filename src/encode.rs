@@ -153,6 +153,18 @@ mod tests {
         }
     }
     #[test]
+    fn custom_hashtype() {
+        let payload = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
+        assert_eq!(
+            payload.encode("pref", HashType::Custom(0)).expect("Failure encoding"),
+            payload.encode_p2pkh("pref").expect("Failure encoding"),
+        );
+        assert_eq!(
+            payload.encode("pref", HashType::Custom(1)).expect("Failure encoding"),
+            payload.encode_p2sh("pref").expect("Failure encoding"),
+        );
+    }
+    #[test]
     fn incorrect_payload_len() {
         let payload = hex!("7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA94");
         match payload.encode("someprefix", HashType::P2PKH) {
