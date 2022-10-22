@@ -1,6 +1,7 @@
 [![docs.rs](https://img.shields.io/docsrs/cashaddr)](https://docs.rs/cashaddr/latest/cashaddr/)
 [![crates.io](https://img.shields.io/crates/v/cashaddr)](https://crates.io/crates/cashaddr)
 [![loicense](https://img.shields.io/crates/l/cashaddr)](https://en.wikipedia.org/wiki/MIT_License)
+[![gitlab build](https://img.shields.io/gitlab/pipeline-status/pezcore/cashaddr?branch=master)](https://gitlab.com/pezcore/cashaddr/-/pipelines/)
 
 
 # Overview
