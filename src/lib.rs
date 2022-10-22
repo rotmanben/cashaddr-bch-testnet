@@ -28,7 +28,7 @@
 //! match payload.encode_p2pkh("someprefix") {
 //!     Err(EncodeError::IncorrectPayloadLen(21)) => (), // pass
 //!     Err(EncodeError::IncorrectPayloadLen(_)) => panic!(
-//!         "Detected incorrect payload lenght, but failed to capture the correct actual input len"
+//!         "Detected incorrect payload length, but failed to capture the correct actual input len"
 //!     ),
 //!     Err(e) => panic!("Detected unexpected error {}", e),
 //!     Ok(_) => panic!("Failed to detect incorrect payload length"),
