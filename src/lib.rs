@@ -500,7 +500,8 @@ mod round_trip {
     #[test]
     fn forward() {
         use super::test_vectors::{TEST_VECTORS, TestCase};
-        for testcase in super::test_vectors::TEST_VECTORS.lines().map(TestCase::from) {
+        for testcase in TEST_VECTORS.lines().map(TestCase::try_from) {
+            let testcase = testcase.expect("caught bad test case");
             let payload: Payload = testcase.cashaddr.parse().unwrap();
             let recon = payload.encode(testcase.prefix, testcase.hashtype).expect("Encoding Failed");
             assert_eq!(testcase.cashaddr, recon);

@@ -1,3 +1,4 @@
+use hex::FromHexError;
 use super::HashType;
 
 pub const TEST_VECTORS: &str = "\
@@ -34,26 +35,40 @@ pub const TEST_VECTORS: &str = "\
     64 	1 	pref:plg0x333p4238k0qrc5ej7rzfw5g8e4a4r6vvzyrcy8j3s5k0en7calvclhw46hudk5flttj6ydvjc0pv3nchp52amk97tqa5zygg96mg7pj3lh8 	D0F346310D5513D9E01E299978624BA883E6BDA8F4C60883C10F28C2967E67EC77ECC7EEEAEAFC6DA89FAD72D11AC961E164678B868AEEEC5F2C1DA08884175B\n\
     64 	15 	prefix:0lg0x333p4238k0qrc5ej7rzfw5g8e4a4r6vvzyrcy8j3s5k0en7calvclhw46hudk5flttj6ydvjc0pv3nchp52amk97tqa5zygg96ms92w6845 	D0F346310D5513D9E01E299978624BA883E6BDA8F4C60883C10F28C2967E67EC77ECC7EEEAEAFC6DA89FAD72D11AC961E164678B868AEEEC5F2C1DA08884175B";
 
-pub struct TestCase {
+#[derive(Debug)]
+pub struct TestCase<'a> {
     pub hashtype: HashType,
-    pub prefix: &'static str,
-    pub cashaddr: &'static str,
+    pub prefix: &'a str,
+    pub cashaddr: &'a str,
     pub pl: Vec<u8>,
 }
 
-impl From<&'static str> for TestCase {
-    fn from(s: &'static str) -> TestCase {
-        let mut it = s.split_whitespace();
-        // Eat the length. it is unused
-        dbg!(it.next());
-        let hashtype: u8 = it.next().expect("did not find type number").parse()
-            .expect("could not parse type number");
-        let hashtype = HashType::try_from(hashtype).expect("hashtype did not parse");
-        let cashaddr  = it.next().expect("did not find a cashaddr");
-        let colon_pos = cashaddr.find(':').expect("expected a colon in cashaddr");
-        let prefix = &cashaddr[..colon_pos];
-        let pl = hex::decode(it.next().expect("did not find a payload"))
-            .expect("could not parse payload");
-        TestCase{hashtype, prefix, cashaddr, pl}
+
+#[derive(Debug)]
+pub enum TestCaseParseError {
+    NoLen,
+    MissingType,
+    BadType,
+    MissingCashaddr,
+    MissingPrefix,
+    MissingPayload,
+    BadPayload(FromHexError),
+}
+
+impl<'a> TryFrom<&'a str> for TestCase<'a> {
+    type Error = TestCaseParseError;
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        use TestCaseParseError::*;
+        let mut it = value.split_whitespace();
+        it.next().ok_or(NoLen)?;
+        let hashtype: HashType = it.next().ok_or(MissingType)?
+            .parse::<u8>()
+            .map_err(|_| BadType)?
+            .try_into().map_err(|_| BadType)?;
+        let cashaddr = it.next().ok_or(MissingCashaddr)?;
+        let (prefix, _) = cashaddr.split_once(':').ok_or(MissingPrefix)?;
+        let pl = hex::decode(it.next().ok_or(MissingPayload)?)
+            .map_err(BadPayload)?;
+        Ok(TestCase{hashtype, prefix, cashaddr, pl})
     }
 }
