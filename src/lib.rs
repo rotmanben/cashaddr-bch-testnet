@@ -255,6 +255,9 @@ impl AsRef<[u8]> for Payload {
 }
 
 #[cfg(test)]
+mod test_vectors;
+
+#[cfg(test)]
 mod round_trip {
     use super::{Payload, HashType, CashEnc};
     use hex_literal::hex;
@@ -497,6 +500,15 @@ mod round_trip {
     #[test]
     fn forward() {
         for testcase in TEST_VECTORS.iter() {
+            let payload: Payload = testcase.cashaddr.parse().unwrap();
+            let recon = payload.encode(testcase.prefix, testcase.hashtype).expect("Encoding Failed");
+            assert_eq!(testcase.cashaddr, recon);
+        }
+    }
+    #[test]
+    fn new_forward() {
+        use super::test_vectors::{TEST_VECTORS, TestCase};
+        for testcase in super::test_vectors::TEST_VECTORS.lines().map(TestCase::from) {
             let payload: Payload = testcase.cashaddr.parse().unwrap();
             let recon = payload.encode(testcase.prefix, testcase.hashtype).expect("Encoding Failed");
             assert_eq!(testcase.cashaddr, recon);
