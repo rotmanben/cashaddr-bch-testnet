@@ -117,13 +117,13 @@ impl Payload {
 mod tests {
     use hex_literal::hex;
     use super::{CashEnc, EncodeError, HashType, Payload};
-    use crate::round_trip::TEST_VECTORS;
+    use crate::test_vectors::{TEST_VECTORS, TestCase};
 
 
     #[test]
     fn cashenc() {
-        for testcase in TEST_VECTORS.iter() {
-            let cashaddr = testcase.payload.encode(testcase.prefix, testcase.hashtype).unwrap();
+        for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
+            let cashaddr = testcase.pl.encode(testcase.prefix, testcase.hashtype).unwrap();
             assert_eq!(cashaddr, testcase.cashaddr);
         }
     }
@@ -144,16 +144,24 @@ mod tests {
     }
     #[test]
     fn encode_p2pkh() {
-        for testcase in TEST_VECTORS.iter().filter(|x| x.hashtype == HashType::P2PKH) {
-            let cashaddr = testcase.payload.encode_p2pkh(testcase.prefix)
+        for testcase in TEST_VECTORS.lines().filter_map(|s| {
+            let tc = TestCase::try_from(s).expect("Failed to parse test vector");
+            if let HashType::P2PKH = tc.hashtype {Some(tc)} else {None}
+        })
+        {
+            let cashaddr = testcase.pl.encode_p2pkh(testcase.prefix)
                 .expect("Failed to parse testvector");
             assert_eq!(cashaddr, testcase.cashaddr);
         }
     }
     #[test]
     fn encode_p2sh() {
-        for testcase in TEST_VECTORS.iter().filter(|x| x.hashtype == HashType::P2SH) {
-            let cashaddr = testcase.payload.encode_p2sh(testcase.prefix)
+        for testcase in TEST_VECTORS.lines().filter_map(|s| {
+            let tc = TestCase::try_from(s).expect("Failed to parse test vector");
+            if let HashType::P2SH = tc.hashtype {Some(tc)} else {None}
+        })
+        {
+            let cashaddr = testcase.pl.encode_p2sh(testcase.prefix)
                 .expect("Failed to parse testvector");
             assert_eq!(cashaddr, testcase.cashaddr);
         }

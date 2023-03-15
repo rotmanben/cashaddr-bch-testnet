@@ -127,13 +127,13 @@ mod tests {
     use hex_literal::hex;
     use super::*;
 
-    use crate::round_trip::TEST_VECTORS;
+    use crate::test_vectors::{TEST_VECTORS, TestCase};
 
     #[test]
     fn decode() {
-        for tc in TEST_VECTORS.iter() {
+        for tc in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
             let payload: Payload = tc.cashaddr.parse().expect("could not parse");
-            assert_eq!(payload.payload, tc.payload, "Incorrect payload parsed");
+            assert_eq!(payload.payload, tc.pl, "Incorrect payload parsed");
             assert_eq!(payload.hash_type, tc.hashtype, "Incorrect Hash Type parsed")
         }
     }
