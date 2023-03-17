@@ -2,7 +2,7 @@ use super::*;
 
 /// Error type describing something that went wrong during enoding a sequence of `u8` into a
 /// cashaddr String
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EncodeError {
     /// Incorrect payload length. Contained value describes the length of the sequence of `u8`
     IncorrectPayloadLen(usize),

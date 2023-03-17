@@ -5,7 +5,9 @@
 //! which is implemented for `[u8]` to support encoding bytes sequences.
 //! ```
 //! use cashaddr::CashEnc;
-//! let payload = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9";
+//! use hex_literal::hex;
+//!
+//! let payload: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
 //!
 //! // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the prefix
 //! let cashaddr = "bchtest:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyvwc0uz5t";
@@ -23,15 +25,11 @@
 //! Incorrect payload length is detected and captured during encoding
 //! ```
 //! use cashaddr::{CashEnc, EncodeError};
-//! let payload = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9t";
-//! match payload.encode_p2pkh("someprefix") {
-//!     Err(EncodeError::IncorrectPayloadLen(21)) => (), // pass
-//!     Err(EncodeError::IncorrectPayloadLen(_)) => panic!(
-//!         "Detected incorrect payload length, but failed to capture the correct actual input len"
-//!     ),
-//!     Err(e) => panic!("Detected unexpected error {}", e),
-//!     Ok(_) => panic!("Failed to detect incorrect payload length"),
-//! }
+//! use hex_literal::hex;
+//!
+//! // Cashaddr codec does not support 21-byte hashes/inputs
+//! let payload: [u8; 21] = hex!("D5B307F0380BCCE6399DCD3987A0F4C2BC8E558FFD");
+//! assert_eq!(payload.encode_p2pkh("someprefix"), Err(EncodeError::IncorrectPayloadLen(21)));
 //! ```
 //!
 //! ## Decoding
@@ -41,40 +39,38 @@
 //!
 //! ```
 //! use cashaddr::{Payload, HashType, DecodeError};
+//! use hex_literal::hex;
 //!
-//! let EXPECTED_PAYLOAD = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9";
+//! const EXPECTED_PAYLOAD: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
 //!
 //! // Use parse() to decode a P2PKH cashaddr string to a `Payload`
-//! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-//! let payload: Payload = cashaddr.parse().unwrap();
+//! let payload: Payload = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2"
+//!     .parse().unwrap();
 //! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2PKH);
 //!
 //! // Use parse() to decode a P2SH cashaddr string to a `Payload`
-//! let cashaddr = "bitcoincash:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyguug74nh";
-//! let payload: Payload = cashaddr.parse().unwrap();
+//! let payload: Payload = "bitcoincash:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyguug74nh"
+//!     .parse().unwrap();
 //! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2SH);
 //!
 //! // arbitrary prefix are supported in decoding
-//! let cashaddr = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla";
-//! let payload: Payload = cashaddr.parse().unwrap();
+//! let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla"
+//!     .parse().unwrap();
 //! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2PKH);
 //!
 //! // Decoding is canse insensitive in the second part of the cashaddr
-//! let cashaddr = "foobar:qr6M7j9NJLdwwzLG9v7v53UNlr4jkmX6eyDe268tla";
-//! let payload: Payload = cashaddr.parse().unwrap();
+//! let payload: Payload = "foobar:qr6M7j9NJLdwwzLG9v7v53UNlr4jkmX6eyDe268tla"
+//!     .parse().unwrap();
 //! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
 //! assert_eq!(payload.hash_type(), HashType::P2PKH);
 //!
 //! // Decoding checks that the checksum is valid
-//! // This char was changed to "8" -------↓
-//! let cashaddr = "foobar:qr6M7j9NJLdwwzLG8v7v53UNlr4jkmX6eyDe268tla";
-//! match cashaddr.parse::<Payload>() {
-//!     Err(DecodeError::ChecksumFailed(_)) => (),
-//!     _ => panic!("Failed to detect corrupt cashaddr checksum"),
-//! }
+//! // This char was changed to "8" -----------↓
+//! let bad_cashaddr = "foobar:qr6M7j9NJLdwwzLG8v7v53UNlr4jkmX6eyDe268tla";
+//! assert_eq!(bad_cashaddr.parse::<Payload>(), Err(DecodeError::ChecksumFailed(0xD4537E8389)))
 //! ```
 
 

@@ -31,7 +31,7 @@ const CHARSET_REV: [Option<u8>; 128] = [
 
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DecodeError {
     /// Invalid character encountered during decoding
     InvalidChar(char),
