@@ -111,6 +111,12 @@ impl Payload {
         }
         full
     }
+
+    /// Format the payload as a cashaddr using human-readable prefix `hrp`
+    pub fn with_prefix(&self, hrp: &str) -> String {
+        // Safe to unwrap here because `Payload` constructors guarantee validity
+        self.payload.encode(hrp, self.hash_type).unwrap()
+    }
 }
 
 #[cfg(test)]
@@ -120,6 +126,19 @@ mod tests {
     use crate::test_vectors::{TEST_VECTORS, TestCase};
 
 
+    #[test]
+    fn with_prefix() {
+        for tc in TEST_VECTORS.lines()
+            .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
+        {
+            let (hrp, _) = tc.cashaddr.split_once(':').expect("Could not extract hrp from test vector");
+            let pl = Payload {
+                payload: tc.pl,
+                hash_type: tc.hashtype,
+            };
+            assert_eq!(pl.with_prefix(hrp), tc.cashaddr);
+        }
+    }
     #[test]
     fn cashenc() {
         for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
