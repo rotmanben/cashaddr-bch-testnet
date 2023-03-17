@@ -25,13 +25,26 @@ impl fmt::Display for EncodeError {
 
 impl std::error::Error for EncodeError {}
 
-/// Encode a sequence of bytes (`u8`) as a cashaddr string. This trait is implemented for all types
-/// implementing `AsRef<[u8]>` where the reference value is a slice of `u8` representing the hash
-/// payload bytes.
-pub trait CashEnc : AsRef<[u8]> {
+/// Encode a hash as a cashaddr string.
+pub trait CashEnc {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
-    /// Hash type. `self` must have length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise and
-    /// [`EncodeError`] is returned describing the lenth of the payload passed in.
+    /// Hash type.
+    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> ;
+
+    /// Conveninence method for encoding as P2PKH hash type
+    fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
+        self.encode(prefix, HashType::P2PKH)
+    }
+    /// Conveninence method for encoding as P2SH hash type
+    fn encode_p2sh(&self, prefix: &str) -> Result<String, EncodeError> {
+        self.encode(prefix, HashType::P2SH)
+    }
+}
+
+/// `CashEnc` is implemented for `[u8]` where the data is the hash digest to be encoded. In this
+/// case, the input bytes must have a length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise an 
+/// [`EncodeError`] describing the lenth of the input is returned.
+impl CashEnc for [u8] {
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
         if let HashType::Custom(x) = hash_type {
             if x > 15 { 
@@ -78,16 +91,7 @@ pub trait CashEnc : AsRef<[u8]> {
         let cashaddr = [prefix, ":", &payload_str, &checksum_str].concat();
         Ok(cashaddr)
     }
-    /// Conveninence method for encoding as P2PKH hash type
-    fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
-        self.encode(prefix, HashType::P2PKH)
-    }
-    /// Conveninence method for encoding as P2SH hash type
-    fn encode_p2sh(&self, prefix: &str) -> Result<String, EncodeError> {
-        self.encode(prefix, HashType::P2SH)
-    }
 }
-impl<T: AsRef<[u8]>> CashEnc for T {}
 
 impl fmt::Display for Payload {
     /// Format the payload as as a cashaddr using `"bitcoincash"`, the default prefix for the

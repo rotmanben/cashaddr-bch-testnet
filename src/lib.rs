@@ -1,9 +1,8 @@
 #![doc = include_str!("../README.md")]
 //! # Usage
 //! ## Encoding
-//! Encoding a sequence of bytes into a cashaddr string is acheived via the [`CashEnc`] trait. This
-//! trait's methods are used to encode the bytes sequence, and is implemented for all types which
-//! implement [`AsRef<[u8]>`]
+//! Encoding a sequence of bytes into a cashaddr string is acheived via the [`CashEnc`] trait,
+//! which is implemented for `[u8]` to support encoding bytes sequences.
 //! ```
 //! use cashaddr::CashEnc;
 //! let payload = b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9";
@@ -200,10 +199,10 @@ impl TryFrom<u8> for HashType {
 /// // Parse a cashaddr `str` as a Payload using trait FromStr
 /// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
 ///
-/// // The payload exposes the hash (via AsRef, or payload())
+/// // Payload can expose the hash via AsRef, or payload()
 /// assert_eq!(payload.as_ref(),  b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
 /// assert_eq!(payload.payload(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
-/// // the payload exposes the hash type via hashtype
+/// // Payload exposes the hash type via the Payload::hashtype method
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
 /// ```
 ///
@@ -224,8 +223,8 @@ impl TryFrom<u8> for HashType {
 /// // is absent
 /// assert_eq!(payload.to_string_no_prefix(), "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
 ///
-/// // Because `Payload` implements `AsRef<[u8]>`, it also implements CashEnc so it can easily be
-/// // encoded back into a cashaddr string
+/// // Because `Payload` implements `Deref<Target=[u8]>`, it can easily be encoded back into a
+/// // cashaddr string via Deref coercion.
 /// assert_eq!(
 ///     payload.encode_p2pkh("foobar").unwrap(),
 ///     "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla"
@@ -252,6 +251,13 @@ impl Payload {
 
 impl AsRef<[u8]> for Payload {
     fn as_ref(&self) -> &[u8] { &self.payload }
+}
+
+impl std::ops::Deref for Payload {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        &self.payload
+    }
 }
 
 #[cfg(test)]
