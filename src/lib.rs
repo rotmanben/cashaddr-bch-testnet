@@ -146,9 +146,8 @@ impl TryFrom<u8> for HashType {
 /// // Parse a cashaddr `str` as a Payload using trait FromStr
 /// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse()?;
 ///
-/// // Payload can expose the hash via AsRef, or payload()
+/// // Payload can expose the hash via AsRef::as_ref
 /// assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
-/// assert_eq!(payload.payload(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
 /// // Payload exposes the hash type via the Payload::hashtype method
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
 ///
@@ -209,10 +208,6 @@ pub struct Payload {
 }
 
 impl Payload {
-    /// get a reference to the raw bytes comprising the payload
-    pub fn payload(&self) -> &[u8] {
-        &self.payload
-    }
     /// Get the HashType
     pub fn hash_type(&self) -> HashType {
         self.hash_type
