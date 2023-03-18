@@ -6,9 +6,13 @@
 
 # Overview
 
-A library crate providing a dependency-free, pure rust implementation of the
+A library crate providing a dependency-free<sup>†</sup>, pure rust
+implementation of the
 [cashaddr](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
 codec. Allows for transcoding between hashes and cashaddr strings.
+
+† This Crate is only dependency-free if no optional crate features are enabled:
+enabling crate features can introduce thrid party dependencies.
 
 ## Features
 
@@ -19,6 +23,14 @@ codec. Allows for transcoding between hashes and cashaddr strings.
 - Elided prefix
 - Comprehensive error detection in decoder
 - Convenience methods for succinct expression of common conversion parameters
+
+## Feature Flags
+
+All crate features are disabled by default. The following optional crate
+features can be enabled to provide additional functionality:
+
+- `convert` enables the [`convert`] module which provides functions for
+converting between cashaddr addresses and legacy Bitcoin addresses.
 
 ## Limitations
 
