@@ -143,28 +143,46 @@ fn convert_bits(data: &[u8], inbits: u8, outbits: u8, pad: bool) -> Vec<u8> {
     ret
 }
 
-/// Type of hash payload. Currently, either
-/// [P2PKH](https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash) or
-/// [P2SH](https://en.bitcoinwiki.org/wiki/Pay-to-Script_Hash), but in the furture more variants
-/// may be added if they are standardized by Bitcoin Cash developers.
-#[non_exhaustive]
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum HashType {
-    P2PKH,
-    P2SH,
-    /// Custom HashType value for explicitly specifying the type bits. Type bits must be less than
-    /// 16. Currently there is no standard for type bits semantics other than `0x00` for P2PKH and
-    /// `0x01` for P2SH, but this variant allows using other values.
-    Custom(u8),
-}
+/// Type of hash represented by a cashaddr string.
+///
+/// There are 16 valid hash types allowed in cashaddr, each associated with one of the first 16
+/// natural numbers: `0x00`...`0x0F`. Two of them have standardized semantics and are provided as
+/// constants on `HashType` for convenience.
+///
+/// | Numeric Value | Standardized Semantics | Convenience Constant |
+/// | ------------- | ---------------------- | -------------------- |
+/// | `0x00`        | [P2PKH](https://developer.bitcoin.org/devguide/transactions.html#p2pkh-script-validation) | `HashType::P2PKH`
+/// | `0x01`        | [P2SH](https://developer.bitcoin.org/devguide/transactions.html#p2sh-scripts) | `HashType::P2SH`
+///
+/// <br/>
+///
+/// The remaining hash types (corresponding to `0x02`...`0x0F`) can be constructed using
+/// [`TryFrom<u8>`]. The semantics of these hash hash types is not standardized and interpretation is
+/// up to the application using them.
+///
+/// ```
+/// use cashaddr::{HashType, DecodeError};
+///
+/// // Here are two different ways to construct a `HashType` using the `TryFrom<u8>` trait
+/// let hash_type = HashType::try_from(3)?;
+/// let hash_type: HashType = 9.try_into()?;
+///
+/// // Attempting to create a HashType that is out-of-range returns and Err type
+/// assert_eq!(HashType::try_from(100), Err(DecodeError::InvalidVersion(100)));
+/// # Ok::<(), DecodeError>(())
+/// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
+pub struct HashType(u8);
 
-impl From<HashType> for u8 {
-    fn from(ht: HashType) -> Self {
-        match ht {
-            HashType::P2PKH => 0x00,
-            HashType::P2SH => 0x01,
-            HashType::Custom(x) => x,
-        }
+impl HashType {
+    /// Hash type for [P2PKH](https://developer.bitcoin.org/devguide/transactions.html#p2pkh-script-validation) addresses
+    pub const P2PKH: Self = HashType(0);
+    /// Hash type for [P2SH](https://developer.bitcoin.org/devguide/transactions.html#p2sh-scripts) addresses
+    pub const P2SH: Self = HashType(1);
+
+    /// The numeric value associated with this hash type
+    pub fn numeric_value(self) -> u8 {
+        self.0
     }
 }
 
@@ -172,9 +190,7 @@ impl TryFrom<u8> for HashType {
     type Error = DecodeError;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            0x00 => Ok(Self::P2PKH),
-            0x01 => Ok(Self::P2SH),
-            x if x <= 15 => Ok(Self::Custom(x)),
+            0..=15 => Ok(HashType(value)),
             _ => Err(DecodeError::InvalidVersion(value)),
         }
     }

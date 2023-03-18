@@ -46,10 +46,11 @@ pub trait CashEnc {
 /// [`EncodeError`] describing the lenth of the input is returned.
 impl CashEnc for [u8] {
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
-        if let HashType::Custom(x) = hash_type {
-            if x > 15 { 
-                return Err(EncodeError::InvalidHashType(x))
-            }
+        // Return an error if the HashType is out of range. This should be impossible because it is
+        // intended that it is impossible to construct a `HashType` instance with an out-of-range
+        // value.
+        if hash_type.0 > 15 { 
+            return Err(EncodeError::InvalidHashType(hash_type.0))
         }
         let payload = self.as_ref();
         let len = payload.len();
@@ -63,7 +64,7 @@ impl CashEnc for [u8] {
             56 => 0x06,
             64 => 0x07,
             _ => return Err(EncodeError::IncorrectPayloadLen(len))
-        } | (u8::from(hash_type) << 3);
+        } | (hash_type.0 << 3);
 
         let mut pl_buf = Vec::with_capacity(len + 1);
         pl_buf.push(version_byte);
@@ -190,21 +191,9 @@ mod tests {
         }
     }
     #[test]
-    fn custom_hashtype() {
-        let payload = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
-        assert_eq!(
-            payload.encode("pref", HashType::Custom(0)).expect("Failure encoding"),
-            payload.encode_p2pkh("pref").expect("Failure encoding"),
-        );
-        assert_eq!(
-            payload.encode("pref", HashType::Custom(1)).expect("Failure encoding"),
-            payload.encode_p2sh("pref").expect("Failure encoding"),
-        );
-    }
-    #[test]
     fn bad_custom_hashtype() {
         let payload = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
-        match payload.encode("pref", HashType::Custom(0xAA)) {
+        match payload.encode("pref", HashType(0xAA)) {
             Err(EncodeError::InvalidHashType(0xAA)) => (), // pass
             Err(e) => panic!("Detected unexpected error: {:?}", e),
             Ok(_) => panic!("failed to detect invalid custom hash type"),
