@@ -128,11 +128,11 @@ impl TryFrom<u8> for HashType {
 
 /// Decoded cashaddr payload
 ///
-/// This type provides the main decoding interface of the crate and encapsulates the decoded hash
-/// and the hash type.
+/// This type provides the main decoding interface of the crate and encapsulates the decoded hash,
+/// the hash type, and the checksum of a decoded cashaddr.
 ///
 /// This type deliberately has private fields to guarantee that it can only be instantiated by
-/// parseing a valid cashaddr str. As such, all `Payload` instances represent a deserialized,
+/// parsing a valid cashaddr str. As such, all `Payload` instances represent a deserialized,
 /// valid, cashaddr.
 ///
 ///
@@ -205,12 +205,18 @@ pub struct Payload {
     payload: Vec<u8>,
     /// hash type of the payload
     hash_type: HashType,
+    /// checksum
+    checksum: u64,
 }
 
 impl Payload {
     /// Get the HashType
     pub fn hash_type(&self) -> HashType {
         self.hash_type
+    }
+    /// Get the Checksum
+    pub fn checksum(&self) -> u64 {
+        self.checksum
     }
 }
 
@@ -248,10 +254,7 @@ mod round_trip {
     #[test]
     fn backward() {
         for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
-            let payload = Payload {
-                payload: testcase.pl,
-                hash_type: testcase.hashtype,
-            };
+            let payload: Payload = testcase.cashaddr.parse().expect("Failed to decode testcase");
             let cashaddr = payload.to_string();
             let recon = cashaddr.parse().unwrap();
             assert_eq!(payload, recon);

@@ -118,6 +118,7 @@ impl FromStr for Payload {
         Ok(Payload {
             payload: body.to_vec(),
             hash_type,
+            checksum,
         })
     }
 }

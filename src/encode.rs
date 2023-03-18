@@ -183,11 +183,10 @@ mod tests {
         for tc in TEST_VECTORS.lines()
             .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
         {
-            let (hrp, _) = tc.cashaddr.split_once(':').expect("Could not extract hrp from test vector");
-            let pl = Payload {
-                payload: tc.pl,
-                hash_type: tc.hashtype,
-            };
+            let (hrp, _) = tc.cashaddr.split_once(':')
+                .expect("Could not extract hrp from test vector");
+            let pl: Payload = tc.cashaddr.parse().expect("Could not decode test vector cashaddr");
+            assert_eq!(pl.payload, tc.pl);
             assert_eq!(pl.with_prefix(hrp), tc.cashaddr);
         }
     }
