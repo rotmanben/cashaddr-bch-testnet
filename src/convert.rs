@@ -11,8 +11,12 @@ pub enum L2CError {
 }
 
 /// Convert a legacy Bitcoin address to cashaddr format
-pub fn from_legacy(s: &str) -> Result<String, L2CError> {
-    let bytes = bs58::decode(s)
+///
+/// Decode string `legacy_addr` as a Legacy Bitcoin P2PKH or P2SH address and re-encode the
+/// resulting hash payload as a cashaddr string using the approriate `HashType` and `"bitcoincash"`
+/// as the human-readable prefix.
+pub fn from_legacy(legacy_addr: &str) -> Result<String, L2CError> {
+    let bytes = bs58::decode(legacy_addr)
         .with_check(None)
         .into_vec()
         .map_err(|x| L2CError::DecodeError(x))?;
@@ -36,8 +40,19 @@ pub enum C2LError {
 }
 
 /// Convert a cashaddr string to a Legacy Bitcoin address
-pub fn to_legacy(s: &str) -> Result<String, C2LError> {
-    let payload: Payload = s.parse().map_err(|x| C2LError::DecodeError(x))?;
+///
+/// cashaddr string `cashaddr` is decoded and its hash payload is interpreted as either a
+/// PubkeyHash or a ScriptHash depending on its hash type. This hash is then encoded as a Legacy
+/// Bitcoin P2PKH address or a P2SH address, using the appropriate standard version byte matching
+/// the cashaddr's hash type. `cashaddr` must have a hash type of either `HashType::P2PKH` or
+/// `HashType::P2SH` as these are the only two hash types supported by the legacy Bitcoin address
+/// formats.
+///
+/// If decoding `cashaddr` fails, return a [`C2LError::DecodeError`]. If `cashaddr` decodes
+/// successfully but has an unsupported hash type, return a [`C2LError::InvalidVersionByte`].
+/// Otherwise, the legacy address string is returned.
+pub fn to_legacy(cashaddr: &str) -> Result<String, C2LError> {
+    let payload: Payload = cashaddr.parse().map_err(|x| C2LError::DecodeError(x))?;
     let vbyte = match payload.hash_type {
         HashType::P2PKH => 0x00,
         HashType::P2SH => 0x05,
