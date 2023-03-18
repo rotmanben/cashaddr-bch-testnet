@@ -225,6 +225,9 @@ impl std::ops::Deref for Payload {
     }
 }
 
+#[cfg(feature = "convert")]
+pub mod convert;
+
 #[cfg(test)]
 mod test_vectors;
 
