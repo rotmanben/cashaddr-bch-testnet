@@ -8,19 +8,26 @@
 
 A library crate providing a dependency-free, pure rust implementation of the
 [cashaddr](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
-codec.
+codec. Allows for transcoding between hashes and cashaddr strings.
 
 ## Features
 
-- Trait-based interfaces for transcoding arbitrary sequence of bytes to/from
-  cashaddr strings
 - Generalized interface supporting all standard and many non-standard use-cases
-- Convenience methods for succinct expression of common conversion parameters
-- Custom hash types
-- Arbitrary prefixes
+- Non-standard hash types (type bits)
+- Arbitrary human-readable prefixes
+- case-insensitive parsing
 - Elided prefix
-- Descriptive error types
-- Payload struct for encapsulating parsed cashaddr payload and hash type
+- Comprehensive error detection in decoder
+- Convenience methods for succinct expression of common conversion parameters
+
+## Limitations
+
+Does not support [Forward Error
+Correction](https://en.wikipedia.org/wiki/Error_correction_code#Forward_error_correction).
+The [BCH Codes](https://en.wikipedia.org/wiki/BCH_code) used in the cashaddr
+codec technically allow for forward error correction, but using them in Bitcoin
+Cash address is dangerous and [strongly
+dicouraged](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md#error-correction).
 
 ## About the Codec
 
