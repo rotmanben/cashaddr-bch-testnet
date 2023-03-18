@@ -1,77 +1,7 @@
 #![doc = include_str!("../README.md")]
 //! # Usage
-//! ## Encoding
-//! Encoding a sequence of bytes into a cashaddr string is acheived via the [`CashEnc`] trait,
-//! which is implemented for `[u8]` to support encoding bytes sequences.
-//! ```
-//! use cashaddr::CashEnc;
-//! use hex_literal::hex;
-//!
-//! let payload: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
-//!
-//! // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the prefix
-//! let cashaddr = "bchtest:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyvwc0uz5t";
-//! assert_eq!(payload.encode_p2sh("bchtest").unwrap(), cashaddr);
-//!
-//! // encode the payload bytes as a p2pkh cashaddr, using "bitcoincash" as the prefix
-//! let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-//! assert_eq!(payload.encode_p2pkh("bitcoincash").unwrap(), cashaddr);
-//!
-//! // arbitrary prefixes are supported
-//! let cashaddr = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla";
-//! assert_eq!(payload.encode_p2pkh("foobar").unwrap(), cashaddr);
-//! ```
-//!
-//! Incorrect payload length is detected and captured during encoding
-//! ```
-//! use cashaddr::{CashEnc, EncodeError};
-//! use hex_literal::hex;
-//!
-//! // Cashaddr codec does not support 21-byte hashes/inputs
-//! let payload: [u8; 21] = hex!("D5B307F0380BCCE6399DCD3987A0F4C2BC8E558FFD");
-//! assert_eq!(payload.encode_p2pkh("someprefix"), Err(EncodeError::IncorrectPayloadLen(21)));
-//! ```
-//!
-//! ## Decoding
-//! Decoding a cashaddr `str` to a binary payload is acheived via the [`Payload`] type which
-//! encapsulates the payload itself and the detected hash type. Parsing is provided by the
-//! [`FromStr`] trait
-//!
-//! ```
-//! use cashaddr::{Payload, HashType, DecodeError};
-//! use hex_literal::hex;
-//!
-//! const EXPECTED_PAYLOAD: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
-//!
-//! // Use parse() to decode a P2PKH cashaddr string to a `Payload`
-//! let payload: Payload = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2"
-//!     .parse().unwrap();
-//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
-//! assert_eq!(payload.hash_type(), HashType::P2PKH);
-//!
-//! // Use parse() to decode a P2SH cashaddr string to a `Payload`
-//! let payload: Payload = "bitcoincash:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyguug74nh"
-//!     .parse().unwrap();
-//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
-//! assert_eq!(payload.hash_type(), HashType::P2SH);
-//!
-//! // arbitrary prefix are supported in decoding
-//! let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla"
-//!     .parse().unwrap();
-//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
-//! assert_eq!(payload.hash_type(), HashType::P2PKH);
-//!
-//! // Decoding is canse insensitive in the second part of the cashaddr
-//! let payload: Payload = "foobar:qr6M7j9NJLdwwzLG9v7v53UNlr4jkmX6eyDe268tla"
-//!     .parse().unwrap();
-//! assert_eq!(payload.as_ref(), EXPECTED_PAYLOAD);
-//! assert_eq!(payload.hash_type(), HashType::P2PKH);
-//!
-//! // Decoding checks that the checksum is valid
-//! // This char was changed to "8" -----------↓
-//! let bad_cashaddr = "foobar:qr6M7j9NJLdwwzLG8v7v53UNlr4jkmX6eyDe268tla";
-//! assert_eq!(bad_cashaddr.parse::<Payload>(), Err(DecodeError::ChecksumFailed(0xD4537E8389)))
-//! ```
+//! Encoding hashes as cashaddr strings is implemented by [`CashEnc`] and decoding cashaddr string
+//! as hashes is implemented by [`Payload`]. See the documentation for these itmes for details.
 
 
 use std::fmt;
@@ -196,29 +126,57 @@ impl TryFrom<u8> for HashType {
     }
 }
 
-/// Representation of a parsed cashaddr payload (i.e. the hash) and a hash type.
+/// Decoded cashaddr payload
+///
+/// This type provides the main decoding interface of the crate and encapsulates the decoded hash
+/// and the hash type.
 ///
 /// This type deliberately has private fields to guarantee that it can only be instantiated by
 /// parseing a valid cashaddr str. As such, all `Payload` instances represent a deserialized,
 /// valid, cashaddr.
 ///
 ///
-/// ## Decoding
-/// This type provides the main interface for decoding cashaddr strings via the [`FromStr`] trait.
+/// # Decoding
+/// Decoding a cashaddr string to a binary payload is acheived via the [`FromStr`] trait:
 /// ```
 /// use cashaddr::{Payload, HashType};
+/// use hex_literal::hex;
+/// # use cashaddr::DecodeError;
 ///
 /// // Parse a cashaddr `str` as a Payload using trait FromStr
-/// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
+/// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse()?;
 ///
 /// // Payload can expose the hash via AsRef, or payload()
-/// assert_eq!(payload.as_ref(),  b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
-/// assert_eq!(payload.payload(), b"\xf5\xbfH\xb3\x97\xda\xe7\x0b\xe8+<\xcaG\x93\xf8\xeb+l\xda\xc9");
+/// assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
+/// assert_eq!(payload.payload(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
 /// // Payload exposes the hash type via the Payload::hashtype method
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
+///
+/// // Parsing is case insensitive over the payload part
+/// let payload: Payload = "foobar:qr6M7j9njLDwWzlG9v7V53unLr4JkmX6eyDE268Tla".parse()?;
+/// assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
+/// assert_eq!(payload.hash_type(), HashType::P2PKH);
+///
+/// # Ok::<(), DecodeError>(())
+/// ```
+/// ### Error Detection
+/// Payload provides comprehensive error detection: decoding with `parse` detects and reports all
+/// possible invalidities in the input cashaddr string.
+/// ```
+/// use cashaddr::{DecodeError, Payload};
+///
+/// // This char was changed to "8" -------------------------------↓
+/// let bad_checksum: Result<Payload, _> = "foobar:qr6M7j9NJLdwwzLG8v7v53UNlr4jkmX6eyDe268tla".parse();
+/// assert_eq!(bad_checksum, Err(DecodeError::ChecksumFailed(0xD4537E8389)));
+///
+/// // This one has an illgal char ---------------------↓
+/// let illegal_char: Result<Payload, _> =  "foobar:qr6mBj9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse();
+/// assert_eq!(illegal_char, Err(DecodeError::InvalidChar('B')));
+///
 /// ```
 ///
-/// ## Encoding
+///
+/// # Encoding
 /// `Payload` supports encoding back to a cashaddr string via the [`fmt::Display`], and [`CashEnc`]
 /// traits, as well as the [`Payload::to_string_no_prefix`] method.
 ///

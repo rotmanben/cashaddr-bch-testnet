@@ -26,6 +26,53 @@ impl fmt::Display for EncodeError {
 impl std::error::Error for EncodeError {}
 
 /// Encode a hash as a cashaddr string.
+///
+/// # Usage
+/// This trait provides the main encoding interface of the crate. It is implemented for `[u8]`
+/// which allows encoding a sequence of arbitrary bytes as a cashaddr string. The main method for
+/// this trait is [`CashEnc::encode`], which allows callers to encode input data as a cashaddr
+/// using a custom human-readable prefix and a custom hash type.
+///
+/// ```
+/// use cashaddr::{CashEnc, HashType};
+/// use hex_literal::hex;
+///
+/// // Arbitrary payload bytes to encode as cashaddr string. Must be one of the allowed length
+/// let payload: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
+///
+/// // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the human-readable prefix
+/// assert_eq!(
+///     payload.encode("bchtest", HashType::P2SH).as_deref(),
+///     Ok("bchtest:pr6m7j9njldwwzlg9v7v53unlr4jkmx6eyvwc0uz5t")
+/// );
+///
+/// // encode the payload bytes as a nonstandard hashtype using "foobar"  as the human-readable
+/// // prefix
+/// assert_eq!(
+///     payload.encode("foobar", HashType::try_from(9)?).as_deref(),
+///     Ok("foobar:fr6m7j9njldwwzlg9v7v53unlr4jkmx6eyxafk3sr7")
+/// );
+///
+/// // provided methods provide a simpler interface for encoding P2PKH and P2SH cashaddr string
+/// // without the need for HashType
+/// assert_eq!(
+///     payload.encode_p2sh("foo").as_deref(),
+///     Ok("foo:pr6m7j9njldwwzlg9v7v53unlr4jkmx6ey0vepygtg")
+/// );
+/// # Ok::<(), cashaddr::DecodeError>(())
+/// ```
+///
+/// The cashaddr codec only support encoding binary payload of specific lenghts, given by
+/// [`ALLOWED_LENGTHS`]. Attempting to encode a byte sequence whose length is not one of these
+/// allowed lengths results in an `Err` variant.
+/// ```
+/// use cashaddr::{CashEnc, EncodeError};
+/// use hex_literal::hex;
+///
+/// // The cashaddr codec does not support 21-byte hashes/inputs, so an Err varient is returned
+/// let payload: [u8; 21] = hex!("D5B307F0380BCCE6399DCD3987A0F4C2BC8E558FFD");
+/// assert_eq!(payload.encode_p2pkh("someprefix"), Err(EncodeError::IncorrectPayloadLen(21)));
+/// ```
 pub trait CashEnc {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
     /// Hash type.
