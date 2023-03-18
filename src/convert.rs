@@ -13,17 +13,17 @@ pub enum L2CError {
 /// Convert a legacy Bitcoin address to cashaddr format
 ///
 /// Decode string `legacy_addr` as a Legacy Bitcoin P2PKH or P2SH address and re-encode the
-/// resulting hash payload as a cashaddr string using the approriate `HashType` and `"bitcoincash"`
+/// resulting hash payload as a cashaddr string using the approriate `HashType` and `hrp`
 /// as the human-readable prefix.
-pub fn from_legacy(legacy_addr: &str) -> Result<String, L2CError> {
+pub fn from_legacy(legacy_addr: &str, hrp: &str) -> Result<String, L2CError> {
     let bytes = bs58::decode(legacy_addr)
         .with_check(None)
         .into_vec()
         .map_err(|x| L2CError::DecodeError(x))?;
     let payload = &bytes[1..];
     match bytes[0] {
-        0x00 => payload.encode_p2pkh("bitcoincash"),
-        0x05 => payload.encode_p2sh("bitcoincash"),
+        0x00 => payload.encode_p2pkh(hrp),
+        0x05 => payload.encode_p2sh(hrp),
         x => Err(super::EncodeError::InvalidHashType(x))
     }
         .map_err(|x| L2CError::EncodeError(x))
@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn from_legacy() {
         assert_eq!(
-            super::from_legacy("1PrAtnrgtx3eZoDLfxWp54KGgX2uXrDdWe").as_deref(),
+            super::from_legacy("1PrAtnrgtx3eZoDLfxWp54KGgX2uXrDdWe", "bitcoincash").as_deref(),
             Ok("bitcoincash:qraf76zhtyuaawjgystnsunzgeflef24zc27hn3sn7")
         );
     }
