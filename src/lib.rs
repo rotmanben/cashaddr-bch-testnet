@@ -1,3 +1,4 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 //! # Usage
 //! Encoding hashes as cashaddr strings is implemented by [`CashEnc`] and decoding cashaddr string
