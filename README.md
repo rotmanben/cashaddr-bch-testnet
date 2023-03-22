@@ -43,13 +43,34 @@ dicouraged](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/c
 
 ## About the Codec
 
-Cashaddr is a base32-based encoding scheme designed to encode a hash digest
-and hash type which describes the use case for the hash. The hash is an
-arbitrary sequence of either 20, 24, 28, 32, 40, 48, 56, or 64 bytes. The
-cashaddr format represents this information as a string which consists of 2
-parts: an arbitrary user-defined prefix, and a base32-encoded representation of
-the hash, hash type, hash length, and a checksum which checks both the hash
-payload and the user prefix. For details, see the [cashaddr
+Cashaddr is a base32-based encoding scheme designed to encode a [hash
+digest](https://en.wikipedia.org/wiki/Hash_function) and hash type which
+describes the use case for the hash, as a string. A cashaddr string consists of
+2 distinct parts separated by a colon (`:`) in the following order:
+
+1. An arbitrary user-defined prefix, sometimes referred to as the
+   "human-readable prefix", the semantics of which are up to the application
+   using cashaddr
+2. A binary payload which is encoded as a
+   [base32](https://en.wikipedia.org/wiki/Base32) string using a specific
+   alphabet. This payload contains the following fields:
+    1. Hash type: one of 16 values which describe the intended use-case for the
+       hash
+    2. Hash length: one of 8 numeric values which describe the length of the
+       hash. Used in verifying cashaddr string
+    3. The hash itself, which is an arbitrary sequence of 20, 24, 28, 32, 40,
+       48, 56, or 64 bytes
+    4. A 40-bit checksum which checks the entire cashaddr, including the
+       user-defined prefix.
+
+Together with the length field, the checksum provides extremely strong
+assurance that a received cashaddr string was not corrupted in transmission.
+
+Currently, the only widespread use of cashaddr is for encoding Bitcoin Cash
+addresses, but its design feautres make it attractive as general-purpose text
+codec for hashes.
+
+For details, see the [cashaddr
 spec](https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md)
 
 ## Attribution
