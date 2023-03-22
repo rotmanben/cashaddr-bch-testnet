@@ -24,7 +24,7 @@ fn polymod(v: &[u8]) -> u64 {
     let mut c: u64 = 1;
     for d in v.iter() {
         let c0: u8 = (c >> 35) as u8;
-        c = ((c & 0x0007_FFFF_FFFF) << 5) ^ u64::from(*d);
+        c = ((c & 0x0007_FFFF_FFFF) << 5) ^ *d as u64;
         if c0 & 0x01 != 0 { c ^= 0x0098_F2BC_8E61; }
         if c0 & 0x02 != 0 { c ^= 0x0079_B76D_99E2; }
         if c0 & 0x04 != 0 { c ^= 0x00F3_3E5F_B3C4; }
