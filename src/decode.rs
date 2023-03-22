@@ -1,12 +1,13 @@
 use std::str::FromStr;
 use std::fmt::{self, Display};
-use std::error::Error;
 
 use super::{HashType, Payload};
 use super::{convert_bits, polymod, expand_prefix};
 
 const SIZE_MASK: u8 = 0x07;
 const TYPE_MASK: u8 = 0x78;
+
+type Result<T> = std::result::Result<T, Error>;
 
 // The cashaddr character set for decoding
 #[rustfmt::skip]
@@ -32,7 +33,7 @@ const CHARSET_REV: [Option<u8>; 128] = [
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
 #[derive(Debug, PartialEq, Eq)]
-pub enum DecodeError {
+pub enum Error {
     /// Invalid character encountered during decoding
     InvalidChar(char),
     /// Invalid input length
@@ -45,7 +46,7 @@ pub enum DecodeError {
     InvalidVersion(u8),
 }
 
-impl Display for DecodeError {
+impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidChar(c) => write!(f, "Invalid Character `{c}` encountered during decode."),
@@ -56,16 +57,16 @@ impl Display for DecodeError {
     }
 }
 
-impl Error for DecodeError {}
+impl std::error::Error for Error {}
 
 
 impl FromStr for Payload {
-    type Err = DecodeError;
+    type Err = Error;
 
-    fn from_str(addr_str: &str) -> Result<Self, DecodeError> {
+    fn from_str(addr_str: &str) -> Result<Self> {
         // Fail fast on empty strings
         if addr_str.is_empty() {
-            return Err(DecodeError::InvalidLength(0));
+            return Err(Error::InvalidLength(0));
         }
 
         let (prefix, payload_str) = match addr_str.split_once(":") {
@@ -78,14 +79,14 @@ impl FromStr for Payload {
             .chars()
             .map(|c| match CHARSET_REV.get(c as usize) {
                 Some(Some(d)) => Ok(*d as u8),
-                _ => Err(DecodeError::InvalidChar(c))
+                _ => Err(Error::InvalidChar(c))
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_>>()?;
 
         // Verify the checksum
         let checksum = polymod(&[&expand_prefix(prefix), &payload_5_bits[..]].concat());
         if checksum != 0 {
-            return Err(DecodeError::ChecksumFailed(checksum));
+            return Err(Error::ChecksumFailed(checksum));
         }
         let checksum: u64 = payload_5_bits
             .iter()
@@ -108,14 +109,14 @@ impl FromStr for Payload {
         let version_size = version & SIZE_MASK;
 
         match version_size {
-            0x00 if body_len != 20 => Err(DecodeError::InvalidLength(body_len)),
-            0x01 if body_len != 24 => Err(DecodeError::InvalidLength(body_len)),
-            0x02 if body_len != 28 => Err(DecodeError::InvalidLength(body_len)),
-            0x03 if body_len != 32 => Err(DecodeError::InvalidLength(body_len)),
-            0x04 if body_len != 40 => Err(DecodeError::InvalidLength(body_len)),
-            0x05 if body_len != 48 => Err(DecodeError::InvalidLength(body_len)),
-            0x06 if body_len != 56 => Err(DecodeError::InvalidLength(body_len)),
-            0x07 if body_len != 64 => Err(DecodeError::InvalidLength(body_len)),
+            0x00 if body_len != 20 => Err(Error::InvalidLength(body_len)),
+            0x01 if body_len != 24 => Err(Error::InvalidLength(body_len)),
+            0x02 if body_len != 28 => Err(Error::InvalidLength(body_len)),
+            0x03 if body_len != 32 => Err(Error::InvalidLength(body_len)),
+            0x04 if body_len != 40 => Err(Error::InvalidLength(body_len)),
+            0x05 if body_len != 48 => Err(Error::InvalidLength(body_len)),
+            0x06 if body_len != 56 => Err(Error::InvalidLength(body_len)),
+            0x07 if body_len != 64 => Err(Error::InvalidLength(body_len)),
             _ => Ok(())
         }?;
 
@@ -158,7 +159,7 @@ mod tests {
     fn checksum() {
         let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr3jkmx6eylep8ekg2";
         match cashaddr.parse::<Payload>() {
-            Err(DecodeError::ChecksumFailed(_)) => (),
+            Err(Error::ChecksumFailed(_)) => (),
             Err(e) => panic!("Expected ChecksumFailed but found {e:?}"),
             Ok(_) => panic!(
                 "Payload successfully parsed from cashaddr with invalid checksum. cashaddr was {}",
@@ -169,7 +170,7 @@ mod tests {
     #[test]
     fn invalid_char() {
         match  "bitcoincash:qr6m7j9njlbWWzlg9v7v53unlr4JKmx6Eylep8ekg2".parse::<Payload>() {
-            Err(DecodeError::InvalidChar('b')) => (),
+            Err(Error::InvalidChar('b')) => (),
             Err(e) => panic!("Failed to detect invalid char, instead detected {:?}", e),
             Ok(_) => panic!("Failed to detect invalid char"),
         }

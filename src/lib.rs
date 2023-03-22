@@ -9,9 +9,9 @@ use std::fmt;
 use std::str::FromStr;
 
 mod decode;
-pub use decode::*;
+pub use decode::Error as DecodeError;
 mod encode;
-pub use encode::*;
+pub use encode::{CashEnc, Error as EncodeError};
 
 /// The cashaddr character set for encoding
 pub const CHARSET: &[u8; 32] = b"qpzry9x8gf2tvdw0s3jn54khce6mua7l";
