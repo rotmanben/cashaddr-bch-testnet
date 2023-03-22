@@ -3,13 +3,15 @@ use super::*;
 /// Error type describing something that went wrong during enoding a sequence of `u8` into a
 /// cashaddr String
 #[derive(Debug, PartialEq, Eq)]
-pub enum EncodeError {
+pub enum Error {
     /// Incorrect payload length. Contained value describes the length of the sequence of `u8`
     IncorrectPayloadLen(usize),
     InvalidHashType(u8),
 }
 
-impl fmt::Display for EncodeError {
+type Result<T> = std::result::Result<T, Error>;
+
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::IncorrectPayloadLen(len) => write!(
@@ -23,7 +25,7 @@ impl fmt::Display for EncodeError {
     }
 }
 
-impl std::error::Error for EncodeError {}
+impl std::error::Error for Error {}
 
 /// Encode a hash as a cashaddr string.
 ///
@@ -76,14 +78,14 @@ impl std::error::Error for EncodeError {}
 pub trait CashEnc {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
     /// Hash type.
-    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> ;
+    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String> ;
 
     /// Conveninence method for encoding as P2PKH hash type
-    fn encode_p2pkh(&self, prefix: &str) -> Result<String, EncodeError> {
+    fn encode_p2pkh(&self, prefix: &str) -> Result<String> {
         self.encode(prefix, HashType::P2PKH)
     }
     /// Conveninence method for encoding as P2SH hash type
-    fn encode_p2sh(&self, prefix: &str) -> Result<String, EncodeError> {
+    fn encode_p2sh(&self, prefix: &str) -> Result<String> {
         self.encode(prefix, HashType::P2SH)
     }
 }
@@ -92,12 +94,12 @@ pub trait CashEnc {
 /// case, the input bytes must have a length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise an 
 /// [`EncodeError`] describing the lenth of the input is returned.
 impl CashEnc for [u8] {
-    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String, EncodeError> {
+    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String> {
         // Return an error if the HashType is out of range. This should be impossible because it is
         // intended that it is impossible to construct a `HashType` instance with an out-of-range
         // value.
         if hash_type.0 > 15 { 
-            return Err(EncodeError::InvalidHashType(hash_type.0))
+            return Err(Error::InvalidHashType(hash_type.0))
         }
         let payload = self.as_ref();
         let len = payload.len();
@@ -110,7 +112,7 @@ impl CashEnc for [u8] {
             48 => 0x05,
             56 => 0x06,
             64 => 0x07,
-            _ => return Err(EncodeError::IncorrectPayloadLen(len))
+            _ => return Err(Error::IncorrectPayloadLen(len))
         } | (hash_type.0 << 3);
 
         let mut pl_buf = Vec::with_capacity(len + 1);
@@ -174,7 +176,7 @@ impl Payload {
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-    use super::{CashEnc, EncodeError, HashType, Payload};
+    use super::{CashEnc, Error, HashType, Payload};
     use crate::test_vectors::{TEST_VECTORS, TestCase};
 
 
@@ -183,11 +185,10 @@ mod tests {
         for tc in TEST_VECTORS.lines()
             .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
         {
-            let (hrp, _) = tc.cashaddr.split_once(':').expect("Could not extract hrp from test vector");
-            let pl = Payload {
-                payload: tc.pl,
-                hash_type: tc.hashtype,
-            };
+            let (hrp, _) = tc.cashaddr.split_once(':')
+                .expect("Could not extract hrp from test vector");
+            let pl: Payload = tc.cashaddr.parse().expect("Could not decode test vector cashaddr");
+            assert_eq!(pl.payload, tc.pl);
             assert_eq!(pl.with_prefix(hrp), tc.cashaddr);
         }
     }
@@ -241,7 +242,7 @@ mod tests {
     fn bad_custom_hashtype() {
         let payload = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
         match payload.encode("pref", HashType(0xAA)) {
-            Err(EncodeError::InvalidHashType(0xAA)) => (), // pass
+            Err(Error::InvalidHashType(0xAA)) => (), // pass
             Err(e) => panic!("Detected unexpected error: {:?}", e),
             Ok(_) => panic!("failed to detect invalid custom hash type"),
         }
@@ -250,7 +251,7 @@ mod tests {
     fn incorrect_payload_len() {
         let payload = hex!("7ADBF6C17084BC86C1706827B41A56F5CA32865925E946EA94");
         match payload.encode("someprefix", HashType::P2PKH) {
-            Err(EncodeError::IncorrectPayloadLen(len)) => assert_eq!(len, 25),
+            Err(Error::IncorrectPayloadLen(len)) => assert_eq!(len, 25),
             Err(e) => panic!("Detected an unexpected error: {}", e),
             Ok(_) => panic!("Failed to detect incorrect payload length for encoding"),
         }

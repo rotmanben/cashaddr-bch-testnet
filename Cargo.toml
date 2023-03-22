@@ -11,6 +11,10 @@ repository = "https://gitlab.com/pezcore/cashaddr"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bs58 = { version = "0.4.0", optional = true, features = ["check"] }
+
+[features]
+convert = ["bs58"]
 
 [dev-dependencies]
 hex-literal = "0.3.4"
