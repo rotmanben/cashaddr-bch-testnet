@@ -37,7 +37,9 @@ pub enum DecodeError {
     InvalidChar(char),
     /// Invalid input length
     InvalidLength(usize),
-    /// Failed Checksum
+    /// Checksum failed during decoding. Inner value is the value of checksum computed by
+    /// polymod(expanded prefix + paylaod), Note this is different from the encoded checksum which
+    /// is just the last 8 characters (40 bits) of the payload
     ChecksumFailed(u64),
     /// Invalid Version byte encountered during decoding
     InvalidVersion(u8),
@@ -72,20 +74,26 @@ impl FromStr for Payload {
         };
 
         // Decode payload to 5 bit array
-        let payload_chars = payload_str.chars(); // Reintialize iterator here
-        let payload_5_bits: Result<Vec<u8>, DecodeError> = payload_chars
+        let payload_5_bits: Vec<u8> = payload_str
+            .chars()
             .map(|c| match CHARSET_REV.get(c as usize) {
                 Some(Some(d)) => Ok(*d as u8),
                 _ => Err(DecodeError::InvalidChar(c))
             })
-            .collect();
-        let payload_5_bits = payload_5_bits?;
+            .collect::<Result<_, _>>()?;
 
         // Verify the checksum
         let checksum = polymod(&[&expand_prefix(prefix), &payload_5_bits[..]].concat());
         if checksum != 0 {
             return Err(DecodeError::ChecksumFailed(checksum));
         }
+        let checksum: u64 = payload_5_bits
+            .iter()
+            .rev()
+            .take(8)
+            .enumerate()
+            .map(|(i, &val)| (val as u64) << (5 * i))
+            .sum();
 
         // Convert from 5 bit array to byte array
         let len_5_bit = payload_5_bits.len();

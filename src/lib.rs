@@ -143,18 +143,23 @@ impl TryFrom<u8> for HashType {
 /// use hex_literal::hex;
 /// # use cashaddr::DecodeError;
 ///
+/// const EXPECTED_HASH: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
+/// const EXPECTED_CHECKSUM: u64 =  0x6E55A3AFFD;
+///
 /// // Parse a cashaddr `str` as a Payload using trait FromStr
 /// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse()?;
 ///
 /// // Payload can expose the hash via AsRef::as_ref
-/// assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
-/// // Payload exposes the hash type via the Payload::hashtype method
+/// assert_eq!(payload.as_ref(), EXPECTED_HASH);
+/// assert_eq!(*payload, EXPECTED_HASH);
+/// assert_eq!(payload.checksum(), EXPECTED_CHECKSUM);
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
 ///
 /// // Parsing is case insensitive over the payload part
 /// let payload: Payload = "foobar:qr6M7j9njLDwWzlG9v7V53unLr4JkmX6eyDE268Tla".parse()?;
-/// assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
+/// assert_eq!(payload.as_ref(), EXPECTED_HASH);
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
+/// assert_eq!(payload.checksum(), EXPECTED_CHECKSUM);
 ///
 /// # Ok::<(), DecodeError>(())
 /// ```
@@ -214,7 +219,8 @@ impl Payload {
     pub fn hash_type(&self) -> HashType {
         self.hash_type
     }
-    /// Get the Checksum
+    /// Get the Checksum. This is the last 40 bits of the payload interpreted as a big-endian
+    /// number, represented as `u64`
     pub fn checksum(&self) -> u64 {
         self.checksum
     }
@@ -255,7 +261,8 @@ mod round_trip {
     fn backward() {
         for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
             let payload: Payload = testcase.cashaddr.parse().expect("Failed to decode testcase");
-            let cashaddr = payload.to_string();
+            let (hrp, _) = testcase.cashaddr.split_once(':').unwrap();
+            let cashaddr = payload.with_prefix(hrp);
             let recon = cashaddr.parse().unwrap();
             assert_eq!(payload, recon);
         }
