@@ -104,4 +104,15 @@ mod tests {
             assert_eq!(super::to_legacy(tc.1).as_deref(), Ok(tc.0));
         }
     }
+
+    #[test]
+    fn round_trip() {
+        use super::{from_legacy, to_legacy};
+        for tc in TEST_VECTORS {
+            let cashaddr = from_legacy(tc.0, "bitcoincash").unwrap();
+            assert_eq!(to_legacy(&cashaddr).as_deref(), Ok(tc.0));
+            let legacy = to_legacy(tc.1).unwrap();
+            assert_eq!(from_legacy(&legacy, "bitcoincash").as_deref(), Ok(tc.1));
+        }
+    }
 }
