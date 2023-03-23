@@ -133,8 +133,8 @@ impl TryFrom<u8> for HashType {
 /// the hash type, and the checksum of a decoded cashaddr.
 ///
 /// This type deliberately has private fields to guarantee that it can only be instantiated by
-/// parsing a valid cashaddr str. As such, all `Payload` instances represent a deserialized,
-/// valid, cashaddr.
+/// parsing a valid cashaddr string. As such, all `Payload` instances represent a deserialized,
+/// valid, cashaddr payload.
 ///
 ///
 /// # Decoding
@@ -150,13 +150,14 @@ impl TryFrom<u8> for HashType {
 /// // Parse a cashaddr `str` as a Payload using trait FromStr
 /// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse()?;
 ///
-/// // Payload can expose the hash via AsRef::as_ref
+/// // Payload can expose the hash via AsRef::as_ref. It also has methods to expose the hash type
+/// // and checksum
 /// assert_eq!(payload.as_ref(), EXPECTED_HASH);
 /// assert_eq!(*payload, EXPECTED_HASH);
 /// assert_eq!(payload.checksum(), EXPECTED_CHECKSUM);
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
 ///
-/// // Parsing is case insensitive over the payload part
+/// // Parsing is case-insensitive over the payload part
 /// let payload: Payload = "foobar:qr6M7j9njLDwWzlG9v7V53unLr4JkmX6eyDE268Tla".parse()?;
 /// assert_eq!(payload.as_ref(), EXPECTED_HASH);
 /// assert_eq!(payload.hash_type(), HashType::P2PKH);
@@ -191,7 +192,8 @@ impl TryFrom<u8> for HashType {
 ///
 /// // For convenience, `Payload` imlements `trait Display` for encoding the payload back to a
 /// // cashaddr string using the "bitcoincash" as the user-defined prefix, but omitting from the
-/// // output. This is elided prefix format and is commonly used to represent bitcoin cash addresses
+/// // output. This is known as the "elided prefix" format and is commonly used to represent
+/// // bitcoin cash addresses
 /// assert_eq!(payload.to_string(), "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
 ///
 /// // Payload::with_prefix can also be used to encode the payload's hash back to a cashaddr string
@@ -234,6 +236,7 @@ impl Payload {
     }
 }
 
+/// Expose the decoded hash digest of a parsed cashaddr payload
 impl AsRef<[u8]> for Payload {
     fn as_ref(&self) -> &[u8] {
         &self.payload

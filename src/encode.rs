@@ -1,11 +1,12 @@
 use super::*;
 
-/// Error type describing something that went wrong during enoding a sequence of `u8` into a
-/// cashaddr String
+/// Error that occurs during cashaddr encoding
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// Incorrect payload length. Contained value describes the length of the sequence of `u8`
     IncorrectPayloadLen(usize),
+    /// Invalid HashType
     InvalidHashType(u8),
 }
 
@@ -35,14 +36,14 @@ impl std::error::Error for Error {}
 /// # Usage
 /// This trait provides the main encoding interface of the crate. It is implemented for `[u8]`
 /// which allows encoding a sequence of arbitrary bytes as a cashaddr string. The main method for
-/// this trait is [`CashEnc::encode`], which allows callers to encode input data as a cashaddr
-/// using a custom human-readable prefix and a custom hash type.
+/// this trait is [`CashEnc::encode`], which encodes input data as a cashaddr string using a
+/// specified human-readable prefix and a custom hash type.
 ///
 /// ```
 /// use cashaddr::{CashEnc, HashType};
 /// use hex_literal::hex;
 ///
-/// // Arbitrary payload bytes to encode as cashaddr string. Must be one of the allowed length
+/// // Arbitrary payload bytes to encode as cashaddr string. Must be one of the allowed lengths
 /// let payload: [u8; 20] = hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9");
 ///
 /// // encode the payload bytes as a p2sh cashaddr, using "bchtest" as the human-readable prefix
@@ -67,7 +68,7 @@ impl std::error::Error for Error {}
 /// # Ok::<(), cashaddr::DecodeError>(())
 /// ```
 ///
-/// The cashaddr codec only support encoding binary payload of specific lenghts, given by
+/// The cashaddr codec only supports encoding hashes of specific lenghts, given by
 /// [`ALLOWED_LENGTHS`]. Attempting to encode a byte sequence whose length is not one of these
 /// allowed lengths results in an `Err` variant.
 /// ```

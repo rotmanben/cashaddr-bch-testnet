@@ -30,7 +30,7 @@ const CHARSET_REV: [Option<u8>; 128] = [
     Some(6),  Some(4),  Some(2),  None,     None,     None,     None,     None,
 ];
 
-/// Error type describing something that went wrong during decoding a cashaddr string.
+/// Error that occurs during cashaddr decoding
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// Invalid character encountered during decoding
@@ -38,8 +38,8 @@ pub enum Error {
     /// Invalid input length
     InvalidLength(usize),
     /// Checksum failed during decoding. Inner value is the value of checksum computed by
-    /// polymod(expanded prefix + paylaod), Note this is different from the encoded checksum which
-    /// is just the last 8 characters (40 bits) of the payload
+    /// polymod(expanded prefix + paylaod), Note this is different from the _encoded checksum_
+    /// which is just the last 8 characters (40 bits) of the payload
     ChecksumFailed(u64),
     /// Invalid Version byte encountered during decoding
     InvalidVersion(u8),
