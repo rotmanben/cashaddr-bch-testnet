@@ -4,7 +4,6 @@
 //! Encoding hashes as cashaddr strings is implemented by [`CashEnc`] and decoding cashaddr string
 //! as hashes is implemented by [`Payload`]. See the documentation for these itmes for details.
 
-
 use std::fmt;
 #[allow(unused_imports)]
 use std::str::FromStr;
@@ -17,9 +16,10 @@ pub use encode::{CashEnc, Error as EncodeError};
 /// The cashaddr character set for encoding
 pub const CHARSET: &[u8; 32] = b"qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 /// The set of allowed hash lengths for cashaddr encoding.
-pub const ALLOWED_LENGTHS: [usize;8] = [20, 24, 28, 32, 40, 48, 56, 64];
+pub const ALLOWED_LENGTHS: [usize; 8] = [20, 24, 28, 32, 40, 48, 56, 64];
 
 // https://github.com/Bitcoin-ABC/bitcoin-abc/blob/2804a49bfc0764ba02ce2999809c52b3b9bb501e/src/cashaddr.cpp#L42
+#[rustfmt::skip]
 fn polymod(v: &[u8]) -> u64 {
     let mut c: u64 = 1;
     for d in v.iter() {
@@ -46,7 +46,7 @@ fn convert_bits(data: &[u8], inbits: u8, outbits: u8, pad: bool) -> Vec<u8> {
     let num_bytes = (data.len() * inbits as usize + outbits as usize - 1) / outbits as usize;
     let mut ret = Vec::with_capacity(num_bytes);
     let mut acc: u16 = 0; // accumulator of bits
-    let mut num: u8 = 0;  // num bits in acc
+    let mut num: u8 = 0; // num bits in acc
     let groupmask = (1 << outbits) - 1;
     for d in data.iter() {
         // We push each input chunk into a 16-bit accumulator
@@ -235,7 +235,9 @@ impl Payload {
 }
 
 impl AsRef<[u8]> for Payload {
-    fn as_ref(&self) -> &[u8] { &self.payload }
+    fn as_ref(&self) -> &[u8] {
+        &self.payload
+    }
 }
 
 impl std::ops::Deref for Payload {
@@ -253,22 +255,32 @@ mod test_vectors;
 
 #[cfg(test)]
 mod round_trip {
-    use super::{Payload, CashEnc};
-    use super::test_vectors::{TEST_VECTORS, TestCase};
-
+    use super::test_vectors::{TestCase, TEST_VECTORS};
+    use super::{CashEnc, Payload};
 
     #[test]
     fn forward() {
-        for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
+        for testcase in TEST_VECTORS
+            .lines()
+            .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
+        {
             let payload: Payload = testcase.cashaddr.parse().unwrap();
-            let recon = payload.encode(testcase.prefix, testcase.hashtype).expect("Encoding Failed");
+            let recon = payload
+                .encode(testcase.prefix, testcase.hashtype)
+                .expect("Encoding Failed");
             assert_eq!(testcase.cashaddr, recon);
         }
     }
     #[test]
     fn backward() {
-        for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
-            let payload: Payload = testcase.cashaddr.parse().expect("Failed to decode testcase");
+        for testcase in TEST_VECTORS
+            .lines()
+            .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
+        {
+            let payload: Payload = testcase
+                .cashaddr
+                .parse()
+                .expect("Failed to decode testcase");
             let (hrp, _) = testcase.cashaddr.split_once(':').unwrap();
             let cashaddr = payload.with_prefix(hrp);
             let recon = cashaddr.parse().unwrap();

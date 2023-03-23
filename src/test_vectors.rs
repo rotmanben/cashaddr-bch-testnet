@@ -1,5 +1,5 @@
-use hex::FromHexError;
 use super::HashType;
+use hex::FromHexError;
 
 pub const TEST_VECTORS: &str = "\
     20 	0 	bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2 	F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9\n\
@@ -43,7 +43,6 @@ pub struct TestCase<'a> {
     pub pl: Vec<u8>,
 }
 
-
 #[derive(Debug)]
 pub enum TestCaseParseError {
     NoLen,
@@ -61,14 +60,21 @@ impl<'a> TryFrom<&'a str> for TestCase<'a> {
         use TestCaseParseError::*;
         let mut it = value.split_whitespace();
         it.next().ok_or(NoLen)?;
-        let hashtype: HashType = it.next().ok_or(MissingType)?
+        let hashtype: HashType = it
+            .next()
+            .ok_or(MissingType)?
             .parse::<u8>()
             .map_err(|_| BadType)?
-            .try_into().map_err(|_| BadType)?;
+            .try_into()
+            .map_err(|_| BadType)?;
         let cashaddr = it.next().ok_or(MissingCashaddr)?;
         let (prefix, _) = cashaddr.split_once(':').ok_or(MissingPrefix)?;
-        let pl = hex::decode(it.next().ok_or(MissingPayload)?)
-            .map_err(BadPayload)?;
-        Ok(TestCase{hashtype, prefix, cashaddr, pl})
+        let pl = hex::decode(it.next().ok_or(MissingPayload)?).map_err(BadPayload)?;
+        Ok(TestCase {
+            hashtype,
+            prefix,
+            cashaddr,
+            pl,
+        })
     }
 }

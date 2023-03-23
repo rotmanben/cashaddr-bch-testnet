@@ -15,11 +15,14 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::IncorrectPayloadLen(len) => write!(
-                f, "Incorrect input length. Expected one of {:?}, got {}",
+                f,
+                "Incorrect input length. Expected one of {:?}, got {}",
                 ALLOWED_LENGTHS, len
             ),
             Self::InvalidHashType(x) => write!(
-                f, "Invalid Custom HashType. Hashtype value must be on 0..16, but found {}", x
+                f,
+                "Invalid Custom HashType. Hashtype value must be on 0..16, but found {}",
+                x
             ),
         }
     }
@@ -78,7 +81,7 @@ impl std::error::Error for Error {}
 pub trait CashEnc {
     /// Encode self into cashaddr using `prefix` as the arbirtrary prefix and `hashtype` as the
     /// Hash type.
-    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String> ;
+    fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String>;
 
     /// Conveninence method for encoding as P2PKH hash type
     fn encode_p2pkh(&self, prefix: &str) -> Result<String> {
@@ -99,15 +102,15 @@ pub trait CashEnc {
 }
 
 /// `CashEnc` is implemented for `[u8]` where the data is the hash digest to be encoded. In this
-/// case, the input bytes must have a length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise an 
+/// case, the input bytes must have a length of 20, 24, 28, 32, 40, 48, 56, or 64, otherwise an
 /// [`EncodeError`] describing the lenth of the input is returned.
 impl CashEnc for [u8] {
     fn encode(&self, prefix: &str, hash_type: HashType) -> Result<String> {
         // Return an error if the HashType is out of range. This should be impossible because it is
         // intended that it is impossible to construct a `HashType` instance with an out-of-range
         // value.
-        if hash_type.0 > 15 { 
-            return Err(Error::InvalidHashType(hash_type.0))
+        if hash_type.0 > 15 {
+            return Err(Error::InvalidHashType(hash_type.0));
         }
         let payload = self.as_ref();
         let len = payload.len();
@@ -120,7 +123,7 @@ impl CashEnc for [u8] {
             48 => 0x05,
             56 => 0x06,
             64 => 0x07,
-            _ => return Err(Error::IncorrectPayloadLen(len))
+            _ => return Err(Error::IncorrectPayloadLen(len)),
         } | (hash_type.0 << 3);
 
         let mut pl_buf = Vec::with_capacity(len + 1);
@@ -174,46 +177,66 @@ impl Payload {
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
     use super::{CashEnc, Error, HashType, Payload};
-    use crate::test_vectors::{TEST_VECTORS, TestCase};
-
+    use crate::test_vectors::{TestCase, TEST_VECTORS};
+    use hex_literal::hex;
 
     #[test]
     fn with_prefix() {
-        for tc in TEST_VECTORS.lines()
+        for tc in TEST_VECTORS
+            .lines()
             .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
         {
-            let (hrp, _) = tc.cashaddr.split_once(':')
+            let (hrp, _) = tc
+                .cashaddr
+                .split_once(':')
                 .expect("Could not extract hrp from test vector");
-            let pl: Payload = tc.cashaddr.parse().expect("Could not decode test vector cashaddr");
+            let pl: Payload = tc
+                .cashaddr
+                .parse()
+                .expect("Could not decode test vector cashaddr");
             assert_eq!(pl.payload, tc.pl);
             assert_eq!(pl.with_prefix(hrp), tc.cashaddr);
         }
     }
     #[test]
     fn cashenc() {
-        for testcase in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
-            let cashaddr = testcase.pl.encode(testcase.prefix, testcase.hashtype).unwrap();
+        for testcase in TEST_VECTORS
+            .lines()
+            .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
+        {
+            let cashaddr = testcase
+                .pl
+                .encode(testcase.prefix, testcase.hashtype)
+                .unwrap();
             assert_eq!(cashaddr, testcase.cashaddr);
         }
     }
     #[test]
     fn payload_to_string() {
         let cashaddr = "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-        let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
+        let payload: Payload = cashaddr
+            .parse()
+            .expect("Couldn't parse cashaddr. Check test impl");
         // Just Check to make sure the the correct payload was parsed
-        assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
+        assert_eq!(
+            payload.as_ref(),
+            hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9")
+        );
         assert_eq!(payload.to_string(), cashaddr);
     }
     #[test]
     fn encode_p2pkh() {
         for testcase in TEST_VECTORS.lines().filter_map(|s| {
             let tc = TestCase::try_from(s).expect("Failed to parse test vector");
-            if let HashType::P2PKH = tc.hashtype {Some(tc)} else {None}
-        })
-        {
-            let cashaddr = testcase.pl.encode_p2pkh(testcase.prefix)
+            match tc.hashtype {
+                HashType::P2PKH => Some(tc),
+                _ => None,
+            }
+        }) {
+            let cashaddr = testcase
+                .pl
+                .encode_p2pkh(testcase.prefix)
                 .expect("Failed to parse testvector");
             assert_eq!(cashaddr, testcase.cashaddr);
         }
@@ -222,10 +245,14 @@ mod tests {
     fn encode_p2sh() {
         for testcase in TEST_VECTORS.lines().filter_map(|s| {
             let tc = TestCase::try_from(s).expect("Failed to parse test vector");
-            if let HashType::P2SH = tc.hashtype {Some(tc)} else {None}
-        })
-        {
-            let cashaddr = testcase.pl.encode_p2sh(testcase.prefix)
+            match tc.hashtype {
+                HashType::P2SH => Some(tc),
+                _ => None,
+            }
+        }) {
+            let cashaddr = testcase
+                .pl
+                .encode_p2sh(testcase.prefix)
                 .expect("Failed to parse testvector");
             assert_eq!(cashaddr, testcase.cashaddr);
         }

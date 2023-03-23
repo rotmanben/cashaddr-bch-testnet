@@ -1,8 +1,8 @@
-use std::str::FromStr;
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
+use super::{convert_bits, expand_prefix, polymod};
 use super::{HashType, Payload};
-use super::{convert_bits, polymod, expand_prefix};
 
 const SIZE_MASK: u8 = 0x07;
 const TYPE_MASK: u8 = 0x78;
@@ -29,7 +29,6 @@ const CHARSET_REV: [Option<u8>; 128] = [
     Some(1),  Some(0),  Some(3),  Some(16), Some(11), Some(28), Some(12), Some(14),
     Some(6),  Some(4),  Some(2),  None,     None,     None,     None,     None,
 ];
-
 
 /// Error type describing something that went wrong during decoding a cashaddr string.
 #[derive(Debug, PartialEq, Eq)]
@@ -59,7 +58,6 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-
 impl FromStr for Payload {
     type Err = Error;
 
@@ -78,7 +76,7 @@ impl FromStr for Payload {
             .chars()
             .map(|c| match CHARSET_REV.get(c as usize) {
                 Some(Some(d)) => Ok(*d as u8),
-                _ => Err(Error::InvalidChar(c))
+                _ => Err(Error::InvalidChar(c)),
             })
             .collect::<Result<_>>()?;
 
@@ -116,7 +114,7 @@ impl FromStr for Payload {
             0x05 if body_len != 48 => Err(Error::InvalidLength(body_len)),
             0x06 if body_len != 56 => Err(Error::InvalidLength(body_len)),
             0x07 if body_len != 64 => Err(Error::InvalidLength(body_len)),
-            _ => Ok(())
+            _ => Ok(()),
         }?;
 
         // Extract the hash type and return
@@ -133,14 +131,17 @@ impl FromStr for Payload {
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
     use super::*;
+    use hex_literal::hex;
 
-    use crate::test_vectors::{TEST_VECTORS, TestCase};
+    use crate::test_vectors::{TestCase, TEST_VECTORS};
 
     #[test]
     fn decode() {
-        for tc in TEST_VECTORS.lines().map(|s| TestCase::try_from(s).expect("Failed to parse test vector")) {
+        for tc in TEST_VECTORS
+            .lines()
+            .map(|s| TestCase::try_from(s).expect("Failed to parse test vector"))
+        {
             let payload: Payload = tc.cashaddr.parse().expect("could not parse");
             assert_eq!(payload.payload, tc.pl, "Incorrect payload parsed");
             assert_eq!(payload.hash_type, tc.hashtype, "Incorrect Hash Type parsed")
@@ -168,7 +169,7 @@ mod tests {
     }
     #[test]
     fn invalid_char() {
-        match  "bitcoincash:qr6m7j9njlbWWzlg9v7v53unlr4JKmx6Eylep8ekg2".parse::<Payload>() {
+        match "bitcoincash:qr6m7j9njlbWWzlg9v7v53unlr4JKmx6Eylep8ekg2".parse::<Payload>() {
             Err(Error::InvalidChar('b')) => (),
             Err(e) => panic!("Failed to detect invalid char, instead detected {:?}", e),
             Ok(_) => panic!("Failed to detect invalid char"),

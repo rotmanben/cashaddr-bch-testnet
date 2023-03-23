@@ -1,5 +1,5 @@
 //! Module for converting between Legacy Bitcoin addresses and Cashaddr addresses.
-use super::{CashEnc, Payload, HashType};
+use super::{CashEnc, HashType, Payload};
 
 /// Errors arising in the convertion of a legacy Bitcoin address to cashaddr format
 #[derive(Debug, PartialEq, Eq)]
@@ -24,9 +24,9 @@ pub fn from_legacy(legacy_addr: &str, hrp: &str) -> Result<String, L2CError> {
     match bytes[0] {
         0x00 => payload.encode_p2pkh(hrp),
         0x05 => payload.encode_p2sh(hrp),
-        x => Err(super::EncodeError::InvalidHashType(x))
+        x => Err(super::EncodeError::InvalidHashType(x)),
     }
-        .map_err(|x| L2CError::EncodeError(x))
+    .map_err(|x| L2CError::EncodeError(x))
 }
 
 /// Errors arising in the conversion of a cashaddr to a legacy Bitcoin address
@@ -35,7 +35,7 @@ pub enum C2LError {
     /// Error occurred during decoding cashaddr string
     DecodeError(super::DecodeError),
     /// Decoded cashaddr had a hash type not suitable for conversion to legacy Bitcoin format. Only
-    /// `HashType::P2PKH` and `HashType::P2SH` are supported 
+    /// `HashType::P2PKH` and `HashType::P2SH` are supported
     InvalidVersionByte(u8),
 }
 
@@ -56,7 +56,11 @@ pub fn to_legacy(cashaddr: &str) -> Result<String, C2LError> {
     let vbyte = match payload.hash_type {
         HashType::P2PKH => 0x00,
         HashType::P2SH => 0x05,
-        _ => return Err(C2LError::InvalidVersionByte(payload.hash_type.numeric_value()))
+        _ => {
+            return Err(C2LError::InvalidVersionByte(
+                payload.hash_type.numeric_value(),
+            ))
+        }
     };
     let mut payload = payload.payload;
     payload.insert(0, vbyte);
