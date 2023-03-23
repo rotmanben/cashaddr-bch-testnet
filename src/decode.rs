@@ -69,10 +69,9 @@ impl FromStr for Payload {
             return Err(Error::InvalidLength(0));
         }
 
-        let (prefix, payload_str) = match addr_str.split_once(":") {
-            Some(x) => x,
-            None => ("bitcoincash", addr_str),
-        };
+        let (prefix, payload_str) = addr_str
+            .split_once(":")
+            .unwrap_or(("bitcoincash", addr_str));
 
         // Decode payload to 5 bit array
         let payload_5_bits: Vec<u8> = payload_str
