@@ -88,6 +88,14 @@ pub trait CashEnc {
     fn encode_p2sh(&self, prefix: &str) -> Result<String> {
         self.encode(prefix, HashType::P2SH)
     }
+    /// Format self as a cashaddr string using `"bitcoincash"` as the user-defined prefix when
+    /// computing the checksum, but omit it from the output. This is the elided prefix format
+    /// commonly used when representing Bitcoin Cash mainnet addresses
+    fn elided_prefix(&self, hash_type: HashType) -> Result<String> {
+        let mut s = self.encode("bitcoincash", hash_type)?;
+        s.replace_range(..12, "");
+        Ok(s)
+    }
 }
 
 /// `CashEnc` is implemented for `[u8]` where the data is the hash digest to be encoded. In this
@@ -144,28 +152,19 @@ impl CashEnc for [u8] {
 }
 
 impl fmt::Display for Payload {
-    /// Format the payload as as a cashaddr using `"bitcoincash"`, the default prefix for the
-    /// bitcoin cash mainnet, as the prefix
+    /// Format the payload as a cashaddr using `"bitcoincash"` as the user-defined prefix but omit
+    /// it from the output. This is equivalent to [`CashEnc::elided_prefix`], except that it uses
+    /// the hash type from the Payload instead of a passed in argument.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // encode result is safely unwrapped here because `Payload` instances can only be
-        // constructed with valud payload fields because `Payload` uses priveate fields and
-        // therefore can only be constructed via methods which guarantee valid payloads
-        let string = self.payload.encode("bitcoincash", self.hash_type).unwrap();
+        // constructed with valid payload fields because `Payload` uses private fields and
+        // therefore can only be constructed via methods which guarantee valid Payloads
+        let string = self.payload.elided_prefix(self.hash_type).unwrap();
         f.pad(&string)
     }
 }
 
 impl Payload {
-    /// Return a cashaddr String for the payload, using `"bitcoincash"` as the prefix, but without
-    /// including the prefix in the output.
-    pub fn to_string_no_prefix(&self) -> String {
-        let mut full = self.to_string();
-        if let Some(sep_pos) = full.find(':') {
-            full.replace_range(..sep_pos + 1, "");
-        }
-        full
-    }
-
     /// Format the payload as a cashaddr using human-readable prefix `hrp`
     pub fn with_prefix(&self, hrp: &str) -> String {
         // Safe to unwrap here because `Payload` constructors guarantee validity
@@ -201,18 +200,11 @@ mod tests {
     }
     #[test]
     fn payload_to_string() {
-        let cashaddr = "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
+        let cashaddr = "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
         let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
         // Just Check to make sure the the correct payload was parsed
         assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
         assert_eq!(payload.to_string(), cashaddr);
-    }
-    #[test]
-    fn payload_to_str_no_prefix() {
-        let cashaddr = "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2";
-        let payload: Payload = cashaddr.parse().expect("Couldn't parse cashaddr. Check test impl");
-        assert_eq!(payload.as_ref(), hex!("F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9"));
-        assert_eq!(payload.to_string_no_prefix(), cashaddr);
     }
     #[test]
     fn encode_p2pkh() {

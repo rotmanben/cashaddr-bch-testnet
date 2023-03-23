@@ -182,27 +182,34 @@ impl TryFrom<u8> for HashType {
 ///
 ///
 /// # Encoding
-/// `Payload` supports encoding back to a cashaddr string via the [`fmt::Display`], and [`CashEnc`]
-/// traits, as well as the [`Payload::to_string_no_prefix`] method.
+/// `Payload` supports encoding back to a cashaddr string via the [`fmt::Display`] trait,
+/// [`Payload::with_prefix`] method:
 ///
 /// ```
 /// use cashaddr::{Payload, HashType, CashEnc};
 /// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
 ///
-/// // For convenience, `Payload` imlements `trait Display` for encoding the payload using the
-/// // "bitcoincash" prefix, which is the standard prefix for the Bitcoin Cash mainnet:
-/// assert_eq!(payload.to_string(), "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
+/// // For convenience, `Payload` imlements `trait Display` for encoding the payload back to a
+/// // cashaddr string using the "bitcoincash" as the user-defined prefix, but omitting from the
+/// // output. This is elided prefix format and is commonly used to represent bitcoin cash addresses
+/// assert_eq!(payload.to_string(), "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
 ///
-/// // For convenience, `Payload` provides to_string_no_prefix method which, which does the same
-/// // but omits the prefix, as is common as most application imply the "bitcoincash" prefix if it
-/// // is absent
-/// assert_eq!(payload.to_string_no_prefix(), "qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2");
+/// // Payload::with_prefix can also be used to encode the payload's hash back to a cashaddr string
+/// // but with a custom prefix. This can be usedful for changing the prefix of cashaddr while
+/// // reusing the same hash and hash type
+/// assert_eq!(payload.with_prefix("newpre"), "newpre:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eynzn88urq");
+/// ```
 ///
-/// // Because `Payload` implements `Deref<Target=[u8]>`, it can easily be encoded back into a
-/// // cashaddr string via Deref coercion.
+/// Because `Payload` implements `Deref<Target=[u8]>`, it can easily be used as a [`CashEnc`] via
+/// deref coersion, allowing for full control over the prefix and hash type, while reusing only the
+/// decoded hash.
+/// ```
+/// use cashaddr::{Payload, HashType, CashEnc};
+/// let payload: Payload = "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla".parse().unwrap();
+///
 /// assert_eq!(
-///     payload.encode_p2pkh("foobar").unwrap(),
-///     "foobar:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eyde268tla"
+///     payload.encode_p2pkh("bazquxx").as_deref(),
+///     Ok("bazquxx:qr6m7j9njldwwzlg9v7v53unlr4jkmx6ey2r9dy5kd")
 /// );
 /// ```
 #[derive(Debug, PartialEq)]
