@@ -1,0 +1,1 @@
+# cashaddr-bch-testnet
