@@ -33,6 +33,8 @@ pub fn from_legacy(legacy_addr: &str, hrp: &str) -> Result<String, L2CError> {
     Ok(match bytes[0] {
         0x00 => payload.encode_p2pkh(hrp),
         0x05 => payload.encode_p2sh(hrp),
+        0x6F => payload.encode_p2pkh(hrp),
+        0xC4 => payload.encode_p2sh(hrp),
         x => Err(super::EncodeError::InvalidHashType(x)),
     }?)
 }
@@ -60,18 +62,21 @@ pub enum C2LError {
 /// successfully but has an unsupported hash type, return a [`C2LError::InvalidVersionByte`].
 /// Otherwise, the legacy address string is returned.
 pub fn to_legacy(cashaddr: &str) -> Result<String, C2LError> {
+    let (prefix, _) = cashaddr.split_once(':').unwrap_or(("", cashaddr));
     let payload: Payload = cashaddr.parse()?;
-    let vbyte = match payload.hash_type {
-        HashType::P2PKH => 0x00,
-        HashType::P2SH => 0x05,
+    let vbyte = match (prefix, payload.hash_type) {
+        ("bchtest", HashType::P2PKH) => 0x6f,
+        ("bchtest", HashType::P2SH) => 0xc4,
+        ("bitcoincash", HashType::P2PKH) | (_, HashType::P2PKH) => 0x00,
+        ("bitcoincash", HashType::P2SH) | (_, HashType::P2SH) => 0x05,
         _ => {
             let n = payload.hash_type.numeric_value();
             return Err(C2LError::InvalidVersionByte(n));
         }
     };
-    let mut payload = payload.payload;
-    payload.insert(0, vbyte);
-    Ok(bs58::encode(payload).with_check().into_string())
+    let mut payload_vec = payload.payload;
+    payload_vec.insert(0, vbyte);
+    Ok(bs58::encode(payload_vec).with_check().into_string())
 }
 
 impl From<super::DecodeError> for C2LError {
@@ -89,13 +94,14 @@ mod tests {
         ("16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb",  "bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r"),
         ("3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC", "bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq"),
         ("3LDsS579y7sruadqu11beEJoTjdFiFCdX4", "bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e"),
-        ("31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw", "bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37"),
+        ("2MwHMZhRWdtmiTRULc4acy3i5YKjWxkSSLo", "bchtest:pqky02x96vnljgxkk23nj3gvs2s6epjkqylarqctca"),
     ];
 
     #[test]
     fn from_legacy() {
         for tc in TEST_VECTORS {
-            assert_eq!(super::from_legacy(tc.0, "bitcoincash").as_deref(), Ok(tc.1));
+            let hrp = tc.1.split(':').next().unwrap_or("bitcoincash");
+            assert_eq!(super::from_legacy(tc.0, hrp).as_deref(), Ok(tc.1));
         }
     }
     #[test]
